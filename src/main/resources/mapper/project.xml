@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xiaojinzi.image.repository.project.ProjectMapper">
+
+    <resultMap id="bean" type="com.xiaojinzi.image.bean.Project">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="remoteAddress" property="remoteAddress"/>
+        <result column="branch" property="branch"/>
+    </resultMap>
+
+    <select id="queryAll" resultMap="bean">
+
+        select e.id,e.name,e.remoteAddress,e.branch from project e
+
+    </select>
+
+    <select id="queryById" resultMap="bean" parameterType="Integer">
+
+        select e.id,e.name,e.remoteAddress,e.branch from project e
+        where id=#{id}
+
+	</select>
+
+</mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--用户表的增删改查-->
+<mapper namespace="com.xiaojinzi.image.repository.user.UserMapper">
+
+    <resultMap id="userBean" type="com.xiaojinzi.image.bean.User">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="pass" property="pass"/>
+    </resultMap>
+
+    <!--根据id查询用户-->
+    <!--<select id="queryAll" resultMap="userBean">-->
+		<!--select u.id,u.`name`,a.id a_id,a.account a_account,a.`password` a_password from user u-->
+        <!--left JOIN user_account ua ON u.id = ua.user_id-->
+        <!--left JOIN account a on ua.account_id = a.id;-->
+	<!--</select>-->
+
+    <insert id="insert" parameterType="com.xiaojinzi.image.bean.User">
+        <selectKey order="AFTER" keyProperty="id" resultType="java.lang.Integer">
+            select LAST_INSERT_ID()
+        </selectKey>
+        insert into
+        user(name,pass)
+        values
+        (#{name},#{name})
+    </insert>
+
+</mapper>
