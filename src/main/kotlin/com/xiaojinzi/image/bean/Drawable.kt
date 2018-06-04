@@ -5,10 +5,10 @@ package com.xiaojinzi.image.bean
  */
 class Drawable {
 
-    // 所属的drawable文件夹目录名称
+    // 资源的名称
     var drawableName: String? = null
 
-    //
+    // 资源的路径,是相对于相对路径
     var imagePath: String? = null
 
     constructor()

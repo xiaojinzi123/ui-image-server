@@ -10,17 +10,21 @@
         <result column="name" property="name"/>
         <result column="remoteAddress" property="remoteAddress"/>
         <result column="branch" property="branch"/>
+        <result column="gitName" property="gitName"/>
+        <result column="gitPass" property="gitPass"/>
+        <result column="resPath" property="resPath"/>
+        <result column="projectType" property="projectType"/>
     </resultMap>
 
     <select id="queryAll" resultMap="bean">
 
-        select e.id,e.name,e.remoteAddress,e.branch from project e
+        select e.id,e.name,e.remoteAddress,e.branch,e.gitName,e.gitPass,e.resPath,e.projectType from project e
 
     </select>
 
     <select id="queryById" resultMap="bean" parameterType="Integer">
 
-        select e.id,e.name,e.remoteAddress,e.branch from project e
+        select e.id,e.name,e.remoteAddress,e.branch,e.gitName,e.gitPass,e.resPath,e.projectType from project e
         where id=#{id}
 
 	</select>

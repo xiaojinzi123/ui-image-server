@@ -4,10 +4,13 @@ import com.xiaojinzi.image.bean.*;
 import com.xiaojinzi.image.util.BusyException;
 import com.xiaojinzi.image.util.UtilPath;
 import org.apache.ibatis.jdbc.Null;
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
+import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,7 +100,7 @@ public class ProjectManager {
         new Thread(() -> {
 
             // 项目的目录
-            File proFoler = getProjectPath(pro);
+            File proFoler = ProjectUtil.getProjectPath(pro);
 
             try {
 
@@ -121,12 +124,6 @@ public class ProjectManager {
 
     }
 
-    public File getProjectPath(Project pro) {
-
-        return new File(proFilder, pro.getName() + "_" + pro.getId());
-
-    }
-
     /**
      * 本地是否存在这个项目的代码
      *
@@ -143,7 +140,7 @@ public class ProjectManager {
         }
 
         // 项目的目录
-        File proFoler = getProjectPath(pro);
+        File proFoler = ProjectUtil.getProjectPath(pro);
 
         return proFoler.exists();
 
@@ -187,18 +184,26 @@ public class ProjectManager {
     private boolean cloneAndSwitchToDevOrPullToNew(Project pro) throws IOException, GitAPIException {
 
         // 项目的目录
-        File proFoler = getProjectPath(pro);
+        File proFoler = ProjectUtil.getProjectPath(pro);
 
         if (proFoler.exists()) { // 说明是已经拉过代码了,更新代码
 
             try {
 
-                Git.open(proFoler)
-                        .pull()
-                        .call();
+                PullCommand pullCommand = Git.open(proFoler)
+                        .pull();
+
+                // 说明有帐号密码
+                if (pro.getGitName() != null && pro.getGitName().length() > 0) {
+                    pullCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(pro.getGitName(), pro.getGitPass()));
+                }
+
+                pullCommand.call();
 
             } catch (Exception ignore) {
+
                 System.out.println("=================== 文件夹已经存在拉取代码失败");
+
             }
 
 
@@ -207,10 +212,13 @@ public class ProjectManager {
             deleteFile(proFoler);
 
             // 拿到了代码
-            Git git = Git.cloneRepository()
+            CloneCommand cloneCommand = Git.cloneRepository()
                     .setDirectory(proFoler)
-                    .setURI(pro.getRemoteAddress())
-                    .call();
+                    .setURI(pro.getRemoteAddress());
+            if (pro.getGitName() != null && pro.getGitName().length() > 0) {
+                cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(pro.getGitName(), pro.getGitPass()));
+            }
+            Git git = cloneCommand.call();
 
             // 检索所有远程分支
 
@@ -272,6 +280,7 @@ public class ProjectManager {
 
     /**
      * 读取项目的资源目录的东西,这里要防止更新线程去更新
+     * 这个方法一定要注意,标志符号的设置一定有有始有终!!
      *
      * @param pro
      * @return
@@ -279,137 +288,46 @@ public class ProjectManager {
     @Nullable
     public synchronized ProjectDrawable readList(Project pro) throws BusyException {
 
-        Boolean isPullNow = isPullMap.get(pro.getId());
+        try {
 
-        if (isPullNow != null && isPullNow == true) {
-            throw new BusyException("此项目正在更新,请稍候再试");
-        }
+            Boolean isPullNow = isPullMap.get(pro.getId());
 
-        // 项目的目录
-        File proFoler = getProjectPath(pro);
-
-        if (!proFoler.exists()) {
-            addProject(pro);
-            doAllPull();
-            throw new BusyException("项目不存在,系统正在拉取项目的代码,请过几分钟后再请求");
-        }
-
-        isReadImageListMap.put(pro.getId(), true);
-
-        File resFolder = new File(proFoler, "/app/src/main/res");
-
-        ProjectDrawable result = doReadList(resFolder);
-
-        isReadImageListMap.put(pro.getId(), false);
-
-        return result;
-
-    }
-
-    private ProjectDrawable doReadList(File resFolder) {
-
-        ProjectDrawable projectDrawable = new ProjectDrawable();
-
-        ArrayList<DrawableCategory> result = new ArrayList<>();
-
-        // key 为图片的名字,后面为同名的图片资源
-        Map<String, List<Drawable>> map = new HashMap<>();
-
-        File[] files = resFolder.listFiles();
-
-        if (files != null) {
-            for (File file : files) {
-
-                // 如果是 drawable 文件夹
-                if (file.exists() && file.isDirectory() && file.getName().startsWith("drawable")) {
-
-                    soveDrawablFolder(file, map, projectDrawable);
-
-                }
-
-            }
-        }
-
-        // 将整理的资源文件转化成前端显示的形式
-
-        DrawableCategory categoryAll = new DrawableCategory("全部");
-
-        Set<Map.Entry<String, List<Drawable>>> entries = map.entrySet();
-
-        for (Map.Entry<String, List<Drawable>> entry : entries) {
-
-            String drawableName = entry.getKey();
-            List<Drawable> drawables = entry.getValue();
-
-            Drawables ds = new Drawables(drawableName);
-            if (drawables != null) {
-                ds.getDrawables().addAll(drawables);
+            if (isPullNow != null && isPullNow == true) {
+                throw new BusyException("此项目正在更新,请稍候再试");
             }
 
-            categoryAll.getDrawablesList().add(ds);
+            // 项目的目录
+            File proFoler = ProjectUtil.getProjectPath(pro);
 
-        }
-
-        result.add(categoryAll);
-
-        projectDrawable.getCategories().addAll(result);
-
-        return projectDrawable;
-
-    }
-
-    private void soveDrawablFolder(File drawableFolder, Map<String, List<Drawable>> map, ProjectDrawable projectDrawable) {
-
-        if (drawableFolder == null || !drawableFolder.exists() || drawableFolder.isFile()) {
-            return;
-        }
-
-        File[] files = drawableFolder.listFiles();
-
-        if (files == null) {
-            return;
-        }
-
-        for (File itemFile : files) {
-
-            if (itemFile.isDirectory()) {
-                continue;
+            if (!proFoler.exists()) {
+                addProject(pro);
+                doAllPull();
+                throw new BusyException("项目不存在,系统正在拉取项目的代码,请过几分钟后再请求");
             }
 
-            String fileName = itemFile.getName();
+            // 标识这个项目正在读取
+            isReadImageListMap.put(pro.getId(), true);
 
-            if (fileName.toLowerCase().endsWith(".png") ||
-                    fileName.toLowerCase().endsWith(".jpg")) {
+            // 拿到资源读取接口
+            DrawableRead drawableRead = pro.tryGetDrawableRead();
 
-                List<Drawable> drawables = map.get(fileName);
+            if (drawableRead == null) {
 
-                if (drawables == null) {
+                throw new BusyException("此项目没有对应的读取项目的实现！");
 
-                    drawables = new ArrayList<>();
-                    map.put(fileName, drawables);
+            } else {
 
-                }
+                ProjectDrawable result = drawableRead.read(pro);
 
-                // 物理机的真实路径,做一个转化
-                String imagePath = itemFile.getPath();
-
-                imagePath = imagePath.replace(proFilder.getPath(), "");
-
-                if (imagePath.length() > 0 && imagePath.startsWith(System.getProperty("file.separator"))) {
-                    imagePath = imagePath.substring(System.getProperty("file.separator").length());
-                }
-
-                drawables.add(new Drawable(drawableFolder.getName(), imagePath));
-
-                if (!projectDrawable.getDrawableSorts().contains(drawableFolder.getName())) {
-                    projectDrawable.getDrawableSorts().add(drawableFolder.getName());
-                }
+                return result;
 
             }
 
+        } finally {
+            // 标识这个项目已经完成读取
+            isReadImageListMap.put(pro.getId(), false);
         }
 
     }
-
 
 }
