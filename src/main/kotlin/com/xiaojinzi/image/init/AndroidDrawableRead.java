@@ -3,7 +3,10 @@ package com.xiaojinzi.image.init;
 import com.xiaojinzi.image.bean.*;
 import org.jetbrains.annotations.NotNull;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -115,7 +118,15 @@ public class AndroidDrawableRead implements DrawableRead {
                     imagePath = imagePath.substring(System.getProperty("file.separator").length());
                 }
 
-                drawables.add(new Drawable(itemFile.getName(), imagePath));
+                Drawable drawable = new Drawable(drawableFolder.getName(), itemFile.getName(), imagePath);
+                drawables.add(drawable);
+
+                try {
+                    BufferedImage bufferedImage = ImageIO.read(itemFile);
+                    drawable.setWidth(bufferedImage.getWidth());
+                    drawable.setHeight(bufferedImage.getHeight());
+                } catch (IOException e) {
+                }
 
             }
 
