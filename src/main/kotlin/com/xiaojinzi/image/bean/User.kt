@@ -2,14 +2,25 @@ package com.xiaojinzi.image.bean
 
 class User {
 
-    private val id: Int? = null
+    var id: Int? = null
 
-    private var name: String? = null
+    var name: String? = null
 
-    private var pass: String? = null
+    var pass: String? = null
+
+    var userToken: String? = null
+
+    constructor(id: Int?, name: String?, pass: String?) {
+        this.id = id
+        this.name = name
+        this.pass = pass
+    }
 
     constructor(name: String?,pass: String?){
         this.name = name;
         this.pass = pass;
     }
+
+    constructor()
+
 }

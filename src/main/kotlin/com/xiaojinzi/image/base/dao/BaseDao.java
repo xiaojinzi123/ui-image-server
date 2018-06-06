@@ -1,6 +1,8 @@
 package com.xiaojinzi.image.base.dao;
 
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 /**
@@ -15,6 +17,7 @@ public interface BaseDao<T, PK> {
      * @param pk
      * @return
      */
+    @Nullable
     T queryById(PK pk);
 
     /**

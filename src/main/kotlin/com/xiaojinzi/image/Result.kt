@@ -6,6 +6,8 @@ class Result<T> {
 
     var msg: String? = null
 
+    var errorCode :Int = ERROR_NORERMAL
+
     var isSuccess: Boolean = false
 
     constructor(data: T) {
@@ -14,16 +16,25 @@ class Result<T> {
         msg = OK
     }
 
-    constructor(msg: String) {
+    constructor(msg: String?) {
         var msg = msg
         this.msg = msg
         isSuccess = false
-        msg = ERROR
+    }
+
+    constructor(msg: String?,errorCode:Int) {
+        var msg = msg
+        this.msg = msg
+        this.errorCode = errorCode
+        isSuccess = false
+
     }
 
     companion object {
         val OK = "ok"
         val ERROR = "error"
+        var ERROR_NORERMAL = 0;
+        var ERROR_TOKENEXPIRE = 1;
     }
 
 }

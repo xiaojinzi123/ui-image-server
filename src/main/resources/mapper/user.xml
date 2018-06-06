@@ -19,7 +19,16 @@
         <!--left JOIN account a on ua.account_id = a.id;-->
 	<!--</select>-->
 
+    <select id="queryById" resultMap="userBean" parameterType="Integer">
+        select e.id,e.name from user e where id=#{id}
+    </select>
+
+    <select id="queryByNameAndPassword" resultMap="userBean">
+		select e.id,e.name from user e where name=#{name} and pass=#{pass}
+	</select>
+
     <insert id="insert" parameterType="com.xiaojinzi.image.bean.User">
+
         <selectKey order="AFTER" keyProperty="id" resultType="java.lang.Integer">
             select LAST_INSERT_ID()
         </selectKey>
@@ -27,6 +36,7 @@
         user(name,pass)
         values
         (#{name},#{name})
+
     </insert>
 
 </mapper>

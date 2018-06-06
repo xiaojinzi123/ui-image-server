@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Login/Logout animation concept</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+
+    <link rel="shortcut icon" href="http://www.1hai.cn/favicon.ico" type="image/x-icon" />
+
+    <link rel="stylesheet" href="css/login.css">
+
+
+</head>
+
+<body>
+
+<div class="cont">
+    <div class="demo">
+        <div class="login">
+            <div class="login__check"></div>
+            <div class="login__form">
+                <div class="login__row">
+                    <svg class="login__icon name svg-icon" viewBox="0 0 20 20">
+                        <path d="M0,20 a10,8 0 0,1 20,0z M10,0 a4,4 0 0,1 0,8 a4,4 0 0,1 0,-8"/>
+                    </svg>
+                    <input id="userName" type="text" class="login__input name" placeholder="Username"/>
+                </div>
+                <div class="login__row">
+                    <svg class="login__icon pass svg-icon" viewBox="0 0 20 20">
+                        <path d="M0,20 20,20 20,8 0,8z M10,13 10,16z M4,8 a6,8 0 0,1 12,0"/>
+                    </svg>
+                    <input id="userPass" type="password" class="login__input pass" placeholder="Password"/>
+                </div>
+                <button id="login" type="button" class="login__submit">Sign in</button>
+                <p id="sign_up" class="login__signup">Don't have an account? &nbsp;<a>Sign up</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src='js/3.3.1.min.js'></script>
+<script src="js/image.js"></script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        var animating = false,
+            submitPhase1 = 1100,
+            submitPhase2 = 400,
+            logoutPhase1 = 800,
+            $login = $(".login"),
+            $app = $(".app");
+
+        function ripple(elem, e) {
+            $(".ripple").remove();
+            var elTop = elem.offset().top,
+                elLeft = elem.offset().left,
+                x = e.pageX - elLeft,
+                y = e.pageY - elTop;
+            var $ripple = $("<div class='ripple'></div>");
+            $ripple.css({top: y, left: x});
+            elem.append($ripple);
+        };
+
+        $(document).on("click", "#login", function (e) {
+            console.log("-------------");
+            if (animating) return;
+            animating = true;
+            var that = this;
+            ripple($(that), e);
+            $(that).addClass("processing");
+            setTimeout(function () {
+                //$(that).addClass("success");
+
+                $(that).removeClass("success processing");
+                animating = false;
+
+                var userName = $("#userName").val();
+                var userPass = $("#userPass").val();
+
+                req({url: baseUrl + "auth/login?name=" + userName + "&password=" + userPass}, function (result) {
+
+                        if (result != null && result.userToken != null) { // 登录成功
+                            localStorage.setItem(keyToken, result.userToken);
+                            location.href = "./index.html"
+                        } else {
+                            alert("登录失败")
+                        }
+
+                    }, function (msg) {
+                        alert("msg = " + msg);
+                    }
+                )
+
+            }, submitPhase1);
+        });
+
+        // 跳转到注册的界面
+        $(document).on("click", "#sign_up", function (e) {
+            location.href = './register.html'
+        });
+
+
+    });
+
+</script>
+
+</body>
+</html>

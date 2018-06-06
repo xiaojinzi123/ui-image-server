@@ -1,6 +1,7 @@
 package com.xiaojinzi.image.base.service;
 
 import com.xiaojinzi.image.base.dao.BaseDao;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
@@ -13,6 +14,7 @@ import java.util.List;
 public abstract class BaseServiceImpl<T> implements BaseService<T, Integer> {
 
     @Transactional
+    @Nullable
     public T queryById(Integer id) {
         return getBaseDao().queryById(id);
     }

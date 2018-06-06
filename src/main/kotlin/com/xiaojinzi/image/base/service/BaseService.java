@@ -1,5 +1,7 @@
 package com.xiaojinzi.image.base.service;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 /**
@@ -7,6 +9,7 @@ import java.util.List;
  */
 public interface BaseService<T, PK> {
 
+    @Nullable
     T queryById(PK pk);
 
     List<T> queryAll();
