@@ -2,6 +2,7 @@
 <html>
 
 <head>
+
     <title>Android Drawable Manager</title>
 
     <link rel="shortcut icon" href="http://www.1hai.cn/favicon.ico" type="image/x-icon"/>
@@ -13,14 +14,17 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
             integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
             crossorigin="anonymous"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
             integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
             crossorigin="anonymous"></script>
+
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
             integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
             crossorigin="anonymous"></script>
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
     <style type="text/css">
         * {
             padding: 0;
@@ -30,10 +34,20 @@
 
         .carousel-control-prev-icon {
             background-image: url("img/arrow-left.png");
+            margin-bottom: 30px;
         }
 
         .carousel-control-next-icon {
             background-image: url("img/arrow-right.png");
+            margin-bottom: 30px;
+        }
+
+        a,.list-group-item {
+            font-size: 13px;
+        }
+
+        .drawable-edit,.drawable-close {
+            cursor: pointer;
         }
 
 
@@ -71,7 +85,7 @@
 
 <div style="display: flex;margin-left: 10px;margin-right: 10px;">
 
-    <div style="width: 240px;">
+    <div style="width: 200px;">
         <!-- List group -->
         <div class="list-group" id="drawabeCategory" role="tablist" style="margin-bottom: 100px;">
             <a class="list-group-item list-group-item-action active" data-toggle="list" href="#all" role="tab">all</a>
@@ -88,10 +102,10 @@
 
         <div id="div_drawable_container">
 
-            <div style="background: white;width :240px;height: 330px;float: left;margin-left: 4px;margin-bottom: 4px;">
+            <div style="background: white;width :200px;height: 240px;float: left;margin-left: 10px;margin-bottom: 10px;position:relative;">
 
                 <div id="carousel1" class="carousel slide" data-ride="carousel" data-interval="5000"
-                     style="width :100%;border-style: solid; border-width: 0.5px;border-color: rgba(180,180,180,0.4);">
+                     style="width :100%;border-style: solid; border-width: 0.5px;border-color: rgba(180,180,180,0.4);padding-bottom: 10px;">
 
                     <ol class="carousel-indicators">
 
@@ -105,7 +119,7 @@
 
                         <div class="carousel-item active" style="width :100%;text-align:center;">
 
-                            <div style="width :240px;height: 180px;display: table-cell;vertical-align: middle;">
+                            <div style="width :200px;height: 100px;display: table-cell;vertical-align: middle;">
 
                                 <img src="http://h.hiphotos.baidu.com/image/pic/item/2cf5e0fe9925bc31b3e6ab0a52df8db1ca1370ed.jpg"
                                      style="max-width: 100%;max-height: 100%;">
@@ -116,7 +130,7 @@
                                 folder：drawable-xhdpi-xhdpi-xhdpi-xhdpi
                             </div>
 
-                            <div style="height: 30px;width: 100%;font-size: 14px;text-align: left;padding: 4px;">
+                            <div style="height: 20px;width: 100%;font-size: 14px;text-align: left;padding: 4px;">
                                 100 * 100
                             </div>
 
@@ -125,7 +139,7 @@
                         <div class="carousel-item" style="width :100%;text-align:center;">
 
 
-                            <div style="width :240px;height: 180px;display: table-cell;vertical-align: middle;font-size: 12px;">
+                            <div style="width :200px;height: 100px;display: table-cell;vertical-align: middle;">
 
                                 <img src="http://h.hiphotos.baidu.com/image/pic/item/2cf5e0fe9925bc31b3e6ab0a52df8db1ca1370ed.jpg"
                                      style="max-width: 100%;max-height: 100%;">
@@ -136,7 +150,7 @@
                                 folder：drawable-xhdpi-xhdpi-xhdpi-xhdpi
                             </div>
 
-                            <div style="height: 30px;width: 100%;font-size: 14px;text-align: left;padding: 4px;">
+                            <div style="height: 20px;width: 100%;font-size: 14px;text-align: left;padding: 4px;">
                                 100 * 100
                             </div>
 
@@ -165,6 +179,10 @@
                     style="width: 100%;height: 60px;margin-top: 0px;text-align: left;padding: 4px;font-size: 14px;">
                     name：app_login_icon.png
                 </h4>
+
+                <img class="drawable-edit" src="img/edit.png" style="width: 28px;height: 28px;position:absolute;left:0;top:0;margin-left: 5px;margin-top: 5px;">
+
+                <img onclick="onDeleteDrawable()" class="drawable-close" src="img/close.png" style="width: 28px;height: 28px;position:absolute;right:0;top:0;margin-right: 5px;margin-top: 5px;">
 
             </div>
 
@@ -235,6 +253,13 @@
         )
 
     });
+
+    /**
+     * 提交一个删除资源的Action
+     */
+    function onDeleteDrawable(drawablesEntity) {
+        alert(drawablesEntity.drawableName)
+    }
 
     function reqProImageList(proId) {
 
@@ -313,8 +338,8 @@
     }
 
     function clearCategoryAndDrawables() {
-        $("#div_drawable_container")[0].innerHTML = "";
         $("#drawabeCategory")[0].innerHTML = "";
+        $("#div_drawable_container")[0].innerHTML = "";
     }
 
     function createOneCategory(categoryIndex, category) {
@@ -344,7 +369,7 @@
         var imageCount = drawables.length;
 
         var div_carousel_container = document.createElement("div");       // ========================== 0
-        div_carousel_container.setAttribute("style", "background: white;width :240px;height: 270px;float: left;margin-left: 4px;margin-bottom: 4px;");
+        div_carousel_container.setAttribute("style", "background: white;width :200px;height: 240px;float: left;margin-left: 10px;margin-bottom: 10px;position:relative;");
 
         var div_carousel = document.createElement("div");       // ========================== 1
 
@@ -354,7 +379,7 @@
         div_carousel.setAttribute("class", "carousel slide");
         div_carousel.setAttribute("data-ride", "carousel");
         div_carousel.setAttribute("data-interval", "0");
-        div_carousel.setAttribute("style", "width :100%;height: 120px;border-style: solid; border-width: 0.5px;border-color: rgba(180,180,180,0.4);");
+        div_carousel.setAttribute("style", "width :100%;border-style: solid; border-width: 0.5px;border-color: rgba(180,180,180,0.4);padding-bottom: 10px;");
 
         var ol_carousel = document.createElement("ol");         // ==========================1.1
         ol_carousel.setAttribute("class", "carousel-indicators");
@@ -391,7 +416,7 @@
 
             var div_carousel_inner_item_item = document.createElement("div"); // ==========================1.2.*.1
             // 这个的这个width不能写100%,否则左右居中就不灵了
-            div_carousel_inner_item_item.setAttribute("style", "width :240px;height: 120px;display: table-cell;vertical-align: middle;");
+            div_carousel_inner_item_item.setAttribute("style", "width :200px;height: 100px;display: table-cell;vertical-align: middle;padding: 4px;");
 
             var img_carousel_inner_item = document.createElement("img"); // ==========================1.2.*.1.*
             //img_carousel_inner_item.setAttribute("class", "d-block w-100 h-100");
@@ -413,7 +438,7 @@
             div_carousel_inner_item.appendChild(div_carousel_inner_item_desc); // ==========================1.2.*.2 -> ==========================1.2.*
 
             var div_carousel_inner_item_drawable_size = document.createElement("div"); // ==========================1.2.*.3
-            div_carousel_inner_item_drawable_size.setAttribute("style", "height: 30px;width: 100%;font-size: 16px;text-align: left;padding: 4px;")
+            div_carousel_inner_item_drawable_size.setAttribute("style", "height: 20px;width: 100%;font-size: 13px;text-align: left;padding: 4px;")
             div_carousel_inner_item_drawable_size.innerText = drawables[i].width + "px * " + drawables[i].height + "px";
 
             div_carousel_inner_item.appendChild(div_carousel_inner_item_drawable_size); // ==========================1.2.*.3 -> ==========================1.2.*
@@ -459,11 +484,32 @@
         div_carousel.appendChild(a_carousel_control_next);                  // ==========================1.4 -> 1
 
         var h4_drawable_desc = document.createElement("h4");                  // ==========================2
-        h4_drawable_desc.setAttribute("style", "width: 100%;height: 60px;margin-top: 90px;text-align: left;padding: 4px;font-size: 14px;");
+        h4_drawable_desc.setAttribute("style", "width: 100%;height: 60px;margin-top: 0px;text-align: left;padding: 4px;font-size: 13px;");
         h4_drawable_desc.setAttribute("class", "card-title");
         h4_drawable_desc.innerText = drawablesEntity.drawableName;
 
         div_carousel_container.appendChild(h4_drawable_desc);                  // ==========================2 -> 0
+
+        // <img class="drawable-edit" src="img/edit.png" style="width: 28px;height: 28px;position:absolute;left:0;top:0;margin-left: 5px;margin-top: 5px;">
+
+        var img_edit_drawable = document.createElement("img");                  // ==========================3
+        img_edit_drawable.setAttribute("src", "img/edit.png");
+        img_edit_drawable.setAttribute("class", "drawable-edit");
+        img_edit_drawable.setAttribute("style", "width: 28px;height: 28px;position:absolute;left:0;top:0;margin-left: 5px;margin-top: 5px;");
+
+        div_carousel_container.appendChild(img_edit_drawable);                  // ==========================3 -> 0
+
+        var img_delete_drawable = document.createElement("img");                  // ==========================4
+        img_delete_drawable.setAttribute("src", "img/close.png");
+        img_delete_drawable.setAttribute("class", "drawable-close");
+        //img_delete_drawable.setAttribute("onclick", "onDeleteDrawable()");
+        img_delete_drawable.setAttribute("style", "width: 28px;height: 28px;position:absolute;right:0;top:0;margin-right: 5px;margin-top: 5px;");
+
+        img_delete_drawable.onclick = function (ev) {
+            onDeleteDrawable(drawablesEntity);
+        }
+
+        div_carousel_container.appendChild(img_delete_drawable);                  // ==========================4 -> 0
 
         return div_carousel_container;
 

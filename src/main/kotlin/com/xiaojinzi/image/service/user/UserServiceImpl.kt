@@ -8,6 +8,7 @@ import com.xiaojinzi.image.util.LoginException
 import com.xiaojinzi.image.util.TokenGeneratorManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service("userService")
 open class UserServiceImpl : BaseServiceImpl<User>(), UserService {
@@ -19,6 +20,7 @@ open class UserServiceImpl : BaseServiceImpl<User>(), UserService {
         return userMapper
     }
 
+    @Transactional
     @Throws(LoginException::class)
     override fun login(name: String, password: String): User {
 

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--用户表的增删改查-->
+<mapper namespace="com.xiaojinzi.image.repository.action.ActionMapper">
+
+    <resultMap id="userBean" type="com.xiaojinzi.image.bean.Action">
+        <id column="id" property="id"/>
+        <result column="action" property="action"/>
+        <result column="source" property="source"/>
+        <result column="target" property="target"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.xiaojinzi.image.bean.Action">
+
+        <selectKey order="AFTER" keyProperty="id" resultType="java.lang.Integer">
+            select LAST_INSERT_ID()
+        </selectKey>
+        insert into
+        action(action,source,target)
+        values
+        (#{action},#{source},#{target})
+
+    </insert>
+
+</mapper>

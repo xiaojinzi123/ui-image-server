@@ -42,11 +42,7 @@ public class IosDrawableRead implements DrawableRead {
 
                     if (itemFile.isDirectory()) {
 
-                        DrawableCategory category = new DrawableCategory(itemFile.getName());
-
-                        soveOneCategoryFolder(itemFile, category);
-
-                        categories.add(category);
+                        soveOneCategoryFolder(itemFile, categories);
 
                     }
 
@@ -60,71 +56,84 @@ public class IosDrawableRead implements DrawableRead {
 
     }
 
-    private void soveOneCategoryFolder(File itemFile, DrawableCategory category) {
+    /**
+     * 处理一个类别的文件夹
+     *
+     * @param itemFile
+     * @param categories
+     */
+    private void soveOneCategoryFolder(File itemFile, ArrayList<DrawableCategory> categories) {
+
+        DrawableCategory category = new DrawableCategory(itemFile.getName());
 
         ArrayList<Drawables> drawablesList = category.getDrawablesList();
 
         File[] files = itemFile.listFiles();
 
-        if (files != null) {
+        if (files == null) {
+            return;
+        }
 
-            for (File drawableFolder : files) {
+        for (File drawableFolder : files) {
 
-                if (!drawableFolder.exists() || drawableFolder.isFile()) {
-                    continue;
-                }
+            if (!drawableFolder.exists() || drawableFolder.isFile()) {
+                continue;
+            }
 
-                String drawableName = drawableFolder.getName();
+            String drawableName = drawableFolder.getName();
 
-                if (drawableName.endsWith(".imageset")) {
+            if (!drawableName.endsWith(".imageset")) { // 这种可能是类别中还有类别
 
-                    drawableName = drawableName.substring(0, drawableName.indexOf(".imageset"));
+                soveOneCategoryFolder(drawableFolder, categories);
 
-                }
+                continue;
 
-                Drawables drawables = new Drawables(drawableName);
+            }
 
-                List<Drawable> drawableList = drawables.getDrawables();
+            drawableName = drawableName.substring(0, drawableName.indexOf(".imageset"));
 
-                File[] drawableFiles = drawableFolder.listFiles();
+            Drawables drawables = new Drawables(drawableName);
 
-                if (drawableFiles != null) {
+            List<Drawable> drawableList = drawables.getDrawables();
 
-                    for (File drawableFile : drawableFiles) {
+            File[] drawableFiles = drawableFolder.listFiles();
 
-                        if (drawableFile.exists() && drawableFile.isFile() &&
-                                (drawableFile.getName().toLowerCase().endsWith(".png") || drawableFile.getName().toLowerCase().endsWith(".jpg"))) {
+            if (drawableFiles != null) {
 
-                            String imagePath = drawableFile.getPath();
+                for (File drawableFile : drawableFiles) {
 
-                            imagePath = imagePath.replace(ProjectUtil.proFilder.getPath(), "");
+                    if (drawableFile.exists() && drawableFile.isFile() &&
+                            (drawableFile.getName().toLowerCase().endsWith(".png") || drawableFile.getName().toLowerCase().endsWith(".jpg"))) {
 
-                            if (imagePath.length() > 0 && imagePath.startsWith(System.getProperty("file.separator"))) {
-                                imagePath = imagePath.substring(System.getProperty("file.separator").length());
-                            }
+                        String imagePath = drawableFile.getPath();
 
-                            Drawable drawable = new Drawable(drawableFile.getName(), imagePath);
-                            drawableList.add(drawable);
+                        imagePath = imagePath.replace(ProjectUtil.proFilder.getPath(), "");
 
-                            try {
-                                BufferedImage bufferedImage = ImageIO.read(drawableFile);
-                                drawable.setWidth(bufferedImage.getWidth());
-                                drawable.setHeight(bufferedImage.getHeight());
-                            } catch (IOException e) {
-                            }
+                        if (imagePath.length() > 0 && imagePath.startsWith(System.getProperty("file.separator"))) {
+                            imagePath = imagePath.substring(System.getProperty("file.separator").length());
+                        }
 
+                        Drawable drawable = new Drawable(drawableFile.getName(), imagePath);
+                        drawableList.add(drawable);
+
+                        try {
+                            BufferedImage bufferedImage = ImageIO.read(drawableFile);
+                            drawable.setWidth(bufferedImage.getWidth());
+                            drawable.setHeight(bufferedImage.getHeight());
+                        } catch (IOException e) {
                         }
 
                     }
 
                 }
 
-                drawablesList.add(drawables);
-
-
             }
 
+            drawablesList.add(drawables);
+
         }
+
+        categories.add(category);
 
     }
 

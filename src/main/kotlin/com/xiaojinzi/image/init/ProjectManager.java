@@ -36,6 +36,9 @@ public class ProjectManager {
     private Map<Integer, Boolean> isPullMap = Collections.synchronizedMap(new HashMap<>());
     private Map<Integer, Boolean> isReadImageListMap = Collections.synchronizedMap(new HashMap<>());
 
+
+    private Map<Integer, ProjectDrawable> drawableCacheMap = Collections.synchronizedMap(new HashMap<>());
+
     private Timer timer = null;
 
     /**
@@ -117,6 +120,7 @@ public class ProjectManager {
             } finally {
 
                 isPullMap.put(pro.getId(), false);
+                drawableCacheMap.remove(pro.getId());
 
             }
 
@@ -290,6 +294,12 @@ public class ProjectManager {
 
         try {
 
+            ProjectDrawable projectDrawable = drawableCacheMap.get(pro.getId());
+
+            if (projectDrawable != null) {
+                return projectDrawable;
+            }
+
             Boolean isPullNow = isPullMap.get(pro.getId());
 
             if (isPullNow != null && isPullNow == true) {
@@ -315,13 +325,13 @@ public class ProjectManager {
 
                 throw new BusyException("此项目没有对应的读取项目的实现！");
 
-            } else {
-
-                ProjectDrawable result = drawableRead.read(pro);
-
-                return result;
-
             }
+
+            ProjectDrawable result = drawableRead.read(pro);
+
+            drawableCacheMap.put(pro.getId(), result);
+
+            return result;
 
         } finally {
             // 标识这个项目已经完成读取

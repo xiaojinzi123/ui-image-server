@@ -3,6 +3,7 @@ package com.xiaojinzi.image.service.user
 import com.xiaojinzi.image.base.service.BaseService
 import com.xiaojinzi.image.bean.User
 import com.xiaojinzi.image.util.LoginException
+import org.springframework.transaction.annotation.Transactional
 import java.io.IOException
 import javax.security.auth.login.LoginContext
 
