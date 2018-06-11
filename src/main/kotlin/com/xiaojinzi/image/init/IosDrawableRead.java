@@ -92,7 +92,7 @@ public class IosDrawableRead implements DrawableRead {
 
             drawableName = drawableName.substring(0, drawableName.indexOf(".imageset"));
 
-            Drawables drawables = new Drawables(drawableName);
+            Drawables drawables = new Drawables(category, drawableName);
 
             List<Drawable> drawableList = drawables.getDrawables();
 

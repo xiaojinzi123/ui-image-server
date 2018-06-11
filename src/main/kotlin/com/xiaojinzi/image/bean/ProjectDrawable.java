@@ -12,7 +12,6 @@ public class ProjectDrawable {
      */
     private ArrayList<DrawableCategory> categories = new ArrayList<>();
 
-
     public ArrayList<DrawableCategory> getCategories() {
         return categories;
     }

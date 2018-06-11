@@ -10,7 +10,9 @@
         <id column="id" property="id"/>
         <result column="action" property="action"/>
         <result column="source" property="source"/>
+        <result column="sourceCategory" property="sourceCategory"/>
         <result column="target" property="target"/>
+        <result column="targetCategory" property="targetCategory"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.xiaojinzi.image.bean.Action">
@@ -19,9 +21,9 @@
             select LAST_INSERT_ID()
         </selectKey>
         insert into
-        action(action,source,target)
+        action(action,source,sourceCategory,target,targetCategory)
         values
-        (#{action},#{source},#{target})
+        (#{action},#{source},#{sourceCategory},#{target},#{targetCategory})
 
     </insert>
 

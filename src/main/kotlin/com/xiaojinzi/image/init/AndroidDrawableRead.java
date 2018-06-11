@@ -60,7 +60,7 @@ public class AndroidDrawableRead implements DrawableRead {
             String drawableName = entry.getKey();
             List<Drawable> drawables = entry.getValue();
 
-            Drawables ds = new Drawables(drawableName);
+            Drawables ds = new Drawables(categoryAll, drawableName);
             if (drawables != null) {
                 ds.getDrawables().addAll(drawables);
             }

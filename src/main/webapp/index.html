@@ -42,11 +42,11 @@
             margin-bottom: 30px;
         }
 
-        a,.list-group-item {
+        a, .list-group-item {
             font-size: 13px;
         }
 
-        .drawable-edit,.drawable-close {
+        .drawable-edit, .drawable-close {
             cursor: pointer;
         }
 
@@ -89,13 +89,30 @@
     <div style="width: 200px;">
         <!-- List group -->
         <div class="list-group" id="drawabeCategory" role="tablist" style="margin-bottom: 100px;">
-            <a class="list-group-item list-group-item-action active" data-toggle="list" href="#all" role="tab">all</a>
-            <a class="list-group-item list-group-item-action" data-toggle="list" href="#home" role="tab">Home</a>
-            <a class="list-group-item list-group-item-action" data-toggle="list" href="#profile" role="tab">Profile</a>
-            <a class="list-group-item list-group-item-action" data-toggle="list" href="#messages"
-               role="tab">Messages</a>
-            <a class="list-group-item list-group-item-action" data-toggle="list" href="#settings"
-               role="tab">Settings</a>
+
+            <!--<a class="list-group-item list-group-item-action active" data-toggle="list" href="#home" role="tab">All</a>-->
+            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#home" role="tab">Home</a>-->
+            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#profile" role="tab">Profile</a>-->
+            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#messages" role="tab">Messages</a>-->
+            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#settings"-->
+            <!--role="tab">Settings</a>-->
+
+            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+                 class="list-group-item list-group-item-action active" data-toggle="list">All
+            </div>
+            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+                 class="list-group-item list-group-item-action" data-toggle="list">Home
+            </div>
+            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+                 class="list-group-item list-group-item-action" data-toggle="list">Profile
+            </div>
+            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+                 class="list-group-item list-group-item-action" data-toggle="list">Messages
+            </div>
+            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+                 class="list-group-item list-group-item-action" data-toggle="list">Settings
+            </div>
+
         </div>
     </div>
 
@@ -103,7 +120,8 @@
 
         <div id="div_drawable_container">
 
-            <div style="background: white;width :200px;height: 240px;float: left;margin-left: 10px;margin-bottom: 10px;position:relative;">
+            <div draggable="true" ondragstart="onDrawableDrag(event)"
+                 style="background: white;width :200px;height: 240px;float: left;margin-left: 10px;margin-bottom: 10px;position:relative;">
 
                 <div id="carousel1" class="carousel slide" data-ride="carousel" data-interval="5000"
                      style="width :100%;border-style: solid; border-width: 0.5px;border-color: rgba(180,180,180,0.4);padding-bottom: 10px;">
@@ -122,7 +140,8 @@
 
                             <div style="width :200px;height: 100px;display: table-cell;vertical-align: middle;">
 
-                                <img src="http://h.hiphotos.baidu.com/image/pic/item/2cf5e0fe9925bc31b3e6ab0a52df8db1ca1370ed.jpg"
+                                <img draggable="true" ondragstart="onDrawableImageDrag(event)"
+                                     src="http://h.hiphotos.baidu.com/image/pic/item/2cf5e0fe9925bc31b3e6ab0a52df8db1ca1370ed.jpg"
                                      style="max-width: 100%;max-height: 100%;">
 
                             </div>
@@ -142,7 +161,8 @@
 
                             <div style="width :200px;height: 100px;display: table-cell;vertical-align: middle;">
 
-                                <img src="http://h.hiphotos.baidu.com/image/pic/item/2cf5e0fe9925bc31b3e6ab0a52df8db1ca1370ed.jpg"
+                                <img draggable="true" ondragstart="onDrawableImageDrag(event)"
+                                     src="http://h.hiphotos.baidu.com/image/pic/item/2cf5e0fe9925bc31b3e6ab0a52df8db1ca1370ed.jpg"
                                      style="max-width: 100%;max-height: 100%;">
 
                             </div>
@@ -181,9 +201,11 @@
                     name：app_login_icon.png
                 </h4>
 
-                <img class="drawable-edit" src="img/edit.png" style="width: 28px;height: 28px;position:absolute;left:0;top:0;margin-left: 5px;margin-top: 5px;">
+                <img class="drawable-edit" src="img/edit.png"
+                     style="width: 28px;height: 28px;position:absolute;left:0;top:0;margin-left: 5px;margin-top: 5px;">
 
-                <img onclick="onDeleteDrawable()" class="drawable-close" src="img/close.png" style="width: 28px;height: 28px;position:absolute;right:0;top:0;margin-right: 5px;margin-top: 5px;">
+                <img onclick="onDeleteDrawable()" class="drawable-close" src="img/close.png"
+                     style="width: 28px;height: 28px;position:absolute;right:0;top:0;margin-right: 5px;margin-top: 5px;">
 
             </div>
 
@@ -201,7 +223,12 @@
 
 <script type="text/javascript">
 
+    var carousel_container_tag_key = "data-carousel_container_tag_key";
+    var carousel_container_tag_value = "carousel_container_tag";
+
     var projectDrawable;
+
+    var mapDrawable = {};
 
     $(document).ready(function () {
 
@@ -258,8 +285,22 @@
     /**
      * 提交一个删除资源的Action
      */
-    function onDeleteDrawable(drawablesEntity) {
-        alert(drawablesEntity.drawableName)
+    function onDeleteDrawable(category, drawablesEntity) {
+
+        req({
+                type: 'DELETE',
+                url: baseUrl + "action?sourceCategory=" + category.name + "&source=" + drawablesEntity.drawableName
+            }, function (result) {
+
+                alert(result);
+
+            }, function (msg) {
+
+                alert("msg = " + msg)
+
+            }
+        )
+
     }
 
     function reqProImageList(proId) {
@@ -283,6 +324,7 @@
     function showImagesOfProject(result) {
 
         projectDrawable = result;
+        mapDrawable = {};
 
         var categories = result.categories;
 
@@ -306,19 +348,15 @@
 
         if (categoryLength > 0) {
 
-            showImagesOfCategory(0);
+            showImagesOfCategory(projectDrawable.categories[0]);
 
         }
 
     }
 
-    function showImagesOfCategory(categiryIndex) {
+    function showImagesOfCategory(category) {
 
-        if (projectDrawable == null) {
-            return;
-        }
-
-        var drawablesList = projectDrawable.categories[categiryIndex].drawablesList;
+        var drawablesList = category.drawablesList;
 
         var drawablesListLength = drawablesList.length;
 
@@ -326,11 +364,18 @@
 
         for (var i = 0; i < drawablesListLength; i++) {
 
-            var div_carousel = createOneCarousel(drawablesList[i], "carousel" + i, i);
+            var drawablesEntity = drawablesList[i];
 
-            // console.log(div_carousel);
+            var div_carousel_container = createOneCarousel(category, drawablesEntity, "carousel" + i);
 
-            $("#div_drawable_container").append(div_carousel);
+            var key = "carousel_" + category.name + "_" + drawablesEntity.drawableName;
+
+            div_carousel_container.setAttribute("data-key", key);
+            div_carousel_container.setAttribute(carousel_container_tag_key, carousel_container_tag_value);
+
+            mapDrawable[key] = drawablesEntity;
+
+            $("#div_drawable_container").append(div_carousel_container);
 
         }
 
@@ -345,31 +390,38 @@
 
     function createOneCategory(categoryIndex, category) {
 
-        var a = document.createElement("a")
+        var div = document.createElement("div")
 
         if (categoryIndex == 0) {
-            a.setAttribute("class", "list-group-item list-group-item-action active");
+            div.setAttribute("class", "list-group-item list-group-item-action active");
         } else {
-            a.setAttribute("class", "list-group-item list-group-item-action");
+            div.setAttribute("class", "list-group-item list-group-item-action");
         }
-        a.setAttribute("data-toggle", "list");
-        a.setAttribute("href", "#");
-        a.setAttribute("role", "tab");
-        a.setAttribute("onclick", "showImagesOfCategory('" + categoryIndex + "')");
+        // ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+        div.setAttribute("ondrop", "onDrawableDrog(event)");
+        div.setAttribute("ondragover", "allowDrop(event)");
+        div.setAttribute("data-toggle", "list");
+        //div.setAttribute("onclick", "showImagesOfCategory('" + categoryIndex + "')");
+        div.onclick = function (ev) {
+            showImagesOfCategory(projectDrawable.categories[categoryIndex])
+        }
 
-        a.innerText = category.name;
+        div.innerText = category.name;
 
-        return a;
+        return div;
 
     }
 
-    function createOneCarousel(drawablesEntity, tag, count) {
+    function createOneCarousel(category, drawablesEntity, tag) {
 
         var drawables = drawablesEntity.drawables;
 
         var imageCount = drawables.length;
 
         var div_carousel_container = document.createElement("div");       // ========================== 0
+        // draggable="true" ondragstart="onDrawableDrag(event)"
+        div_carousel_container.setAttribute("draggable", "true");
+        div_carousel_container.setAttribute("ondragstart", "onDrawableDrag(event)");
         div_carousel_container.setAttribute("style", "background: white;width :200px;height: 240px;float: left;margin-left: 10px;margin-bottom: 10px;position:relative;");
 
         var div_carousel = document.createElement("div");       // ========================== 1
@@ -420,6 +472,8 @@
             div_carousel_inner_item_item.setAttribute("style", "width :200px;height: 100px;display: table-cell;vertical-align: middle;padding: 4px;");
 
             var img_carousel_inner_item = document.createElement("img"); // ==========================1.2.*.1.*
+            img_carousel_inner_item.setAttribute("draggable", "true");
+            img_carousel_inner_item.setAttribute("ondragstart", "onDrawableImageDrag(event)");
             //img_carousel_inner_item.setAttribute("class", "d-block w-100 h-100");
             img_carousel_inner_item.setAttribute("style", "max-width: 100%;max-height: 100%;");
             img_carousel_inner_item.setAttribute("src", baseUrl + drawables[i].imagePath);
@@ -507,7 +561,7 @@
         img_delete_drawable.setAttribute("style", "width: 28px;height: 28px;position:absolute;right:0;top:0;margin-right: 5px;margin-top: 5px;");
 
         img_delete_drawable.onclick = function (ev) {
-            onDeleteDrawable(drawablesEntity);
+            onDeleteDrawable(category, drawablesEntity);
         }
 
         div_carousel_container.appendChild(img_delete_drawable);                  // ==========================4 -> 0
@@ -517,6 +571,76 @@
 
     }
 
+
+    // =============================== 有关拖动的 start===============================
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function onDrawableImageDrag(ev) {
+        console.log(ev.target.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute("data-key"));
+        ev.dataTransfer.setData("data-key", ev.target.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute("data-key"));
+    }
+
+    function onDrawableDrag(ev) {
+        ev.dataTransfer.setData("data-key", ev.target.getAttribute("data-key"));
+    }
+
+    function onDrawableDrog(ev) {
+
+        ev.preventDefault();
+
+        // 拿到一个 drawable 的key
+        var key = ev.dataTransfer.getData("data-key");
+
+        console.log("ev.target = " + ev.target.id);
+        console.log("key = " + key);
+
+        if (key == null || key == "" || key.toLocaleLowerCase() == "null") {
+            return;
+        }
+
+        // 拿到拖拽过来的 drawable 对应的数据
+        var drawableEntity = mapDrawable[key]
+
+        // 拿到拖拽的目标类别名称
+        var targetCategoryName = ev.target.innerText;
+        var originalCategoryName = drawableEntity.drawableCategory.name;
+
+        if (targetCategoryName == originalCategoryName) { // 表示拖到了同一个类别下
+            alert("不能移动到同一类别!请选择其他类别")
+        } else {
+
+            var sourceCategory = originalCategoryName;
+            var source = drawableEntity.drawableName;
+            var targetCategory = targetCategoryName;
+
+            req({
+                    type: 'PUT',
+                    url: baseUrl + "action?sourceCategory=" + sourceCategory + "&source=" + source + "&targetCategory=" + targetCategory
+                }, function (result) {
+
+                    alert(result);
+
+                }, function (msg) {
+
+                    alert("msg = " + msg)
+
+                }
+            )
+        }
+
+        // console.log("ev.target.innerText = " + ev.target.innerText);
+        // console.log("drawableEntity = " + drawableEntity);
+        // console.log("drawableEntity.string = " + JSON.stringify(drawableEntity));
+        // console.log("drawableEntity.drawableName = " + drawableEntity.drawableName);
+
+        //ev.target.appendChild(document.getElementById(data));
+
+    }
+
+    // =============================== 有关拖动的 end=================================
 
 </script>
 

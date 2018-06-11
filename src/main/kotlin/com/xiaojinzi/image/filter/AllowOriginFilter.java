@@ -14,6 +14,7 @@ public class AllowOriginFilter implements Filter {
 
         if (response instanceof HttpServletResponse) {
             ((HttpServletResponse) response).setHeader("Access-Control-Allow-Origin", "*");
+            ((HttpServletResponse) response).setHeader("Access-Control-Allow-Methods", "*");
         }
         chain.doFilter(request,response);
 

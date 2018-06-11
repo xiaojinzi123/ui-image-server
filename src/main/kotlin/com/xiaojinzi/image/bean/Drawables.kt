@@ -6,13 +6,17 @@ package com.xiaojinzi.image.bean
  */
 class Drawables {
 
+    // 所属的类别
+    var drawableCategory: DrawableCategory? = null
+
     // 这个资源的名称,指的是同一个名字在不同分辨率下的资源
     // 这个就是资源的名字
     var drawableName: String? = null
 
     var drawables: List<Drawable>? = ArrayList()
 
-    constructor(drawableName: String?) {
+    constructor(drawableCategory: DrawableCategory?, drawableName: String?) {
+        this.drawableCategory = DrawableCategory(drawableCategory!!.name)
         this.drawableName = drawableName
     }
 

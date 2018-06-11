@@ -34,7 +34,7 @@ class Project {
 
     var projectType: String? = null
 
-    // 额外的字段
+    // 额外的字段, 表示资源读取的实现
     var drawableRead: DrawableRead? = null
 
     fun tryGetDrawableRead(): DrawableRead? {

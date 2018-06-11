@@ -2,8 +2,6 @@ package com.xiaojinzi.image.init;
 
 import com.xiaojinzi.image.bean.*;
 import com.xiaojinzi.image.util.BusyException;
-import com.xiaojinzi.image.util.UtilPath;
-import org.apache.ibatis.jdbc.Null;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
@@ -11,7 +9,6 @@ import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -31,11 +28,7 @@ public class ProjectManager {
 
     private Vector<Project> projects = new Vector<>();
 
-    private File proFilder = new File(UtilPath.getRootPath());
-
     private Map<Integer, Boolean> isPullMap = Collections.synchronizedMap(new HashMap<>());
-    private Map<Integer, Boolean> isReadImageListMap = Collections.synchronizedMap(new HashMap<>());
-
 
     private Map<Integer, ProjectDrawable> drawableCacheMap = Collections.synchronizedMap(new HashMap<>());
 
@@ -60,7 +53,7 @@ public class ProjectManager {
 //                System.out.println("rootPath : " + UtilPath.getRootPath());
 //                System.out.println("WEB_INFPath : " + UtilPath.getWEB_INF());
 
-                    doAllPull();
+                    doAllPull(null);
 
                 }
 
@@ -71,11 +64,16 @@ public class ProjectManager {
 
     }
 
-    private void doAllPull() {
+    private void doAllPull(Project pro) {
 
-        for (Project project : projects) {
-            pullPro(project);
+        if (pro == null) {
+            for (Project project : projects) {
+                pullPro(project);
+            }
+        } else {
+            pullPro(pro);
         }
+
 
     }
 
@@ -86,12 +84,6 @@ public class ProjectManager {
      */
     private synchronized void pullPro(final Project pro) {
 
-        Boolean isReadImageList = isReadImageListMap.get(pro.getId());
-
-        if (isReadImageList != null && isReadImageList) { // 如果正在读取,就放弃执行
-            return;
-        }
-
         Boolean isPullNow = isPullMap.get(pro.getId());
 
         if (isPullNow != null && isPullNow == true) {
@@ -99,6 +91,8 @@ public class ProjectManager {
         }
 
         isPullMap.put(pro.getId(), true);
+
+        drawableCacheMap.remove(pro.getId());
 
         new Thread(() -> {
 
@@ -113,6 +107,20 @@ public class ProjectManager {
                     throw new Exception("unknow");
                 }
 
+                // 拿到资源读取接口
+                DrawableRead drawableRead = pro.tryGetDrawableRead();
+
+                if (drawableRead == null) {
+
+                    throw new BusyException("此项目没有对应的读取项目的实现！");
+
+                }
+
+                ProjectDrawable result = drawableRead.read(pro);
+
+                drawableCacheMap.put(pro.getId(), result);
+
+
             } catch (Exception e) {
 
                 deleteFile(proFoler);
@@ -120,7 +128,6 @@ public class ProjectManager {
             } finally {
 
                 isPullMap.put(pro.getId(), false);
-                drawableCacheMap.remove(pro.getId());
 
             }
 
@@ -204,9 +211,11 @@ public class ProjectManager {
 
                 pullCommand.call();
 
+                System.out.println("--------------" + pro.getName() + " project pull code successful !!");
+
             } catch (Exception ignore) {
 
-                System.out.println("=================== 文件夹已经存在拉取代码失败");
+                System.out.println("--------------" + pro.getName() + " project pull code unsuccessful !!");
 
             }
 
@@ -296,46 +305,14 @@ public class ProjectManager {
 
             ProjectDrawable projectDrawable = drawableCacheMap.get(pro.getId());
 
-            if (projectDrawable != null) {
-                return projectDrawable;
+            if (projectDrawable == null) { // 说明没有拉取成功呢
+                doAllPull(pro);
+                throw new BusyException("项目正在更新,请稍候再试");
             }
 
-            Boolean isPullNow = isPullMap.get(pro.getId());
-
-            if (isPullNow != null && isPullNow == true) {
-                throw new BusyException("此项目正在更新,请稍候再试");
-            }
-
-            // 项目的目录
-            File proFoler = ProjectUtil.getProjectPath(pro);
-
-            if (!proFoler.exists()) {
-                addProject(pro);
-                doAllPull();
-                throw new BusyException("项目不存在,系统正在拉取项目的代码,请过几分钟后再请求");
-            }
-
-            // 标识这个项目正在读取
-            isReadImageListMap.put(pro.getId(), true);
-
-            // 拿到资源读取接口
-            DrawableRead drawableRead = pro.tryGetDrawableRead();
-
-            if (drawableRead == null) {
-
-                throw new BusyException("此项目没有对应的读取项目的实现！");
-
-            }
-
-            ProjectDrawable result = drawableRead.read(pro);
-
-            drawableCacheMap.put(pro.getId(), result);
-
-            return result;
+            return projectDrawable;
 
         } finally {
-            // 标识这个项目已经完成读取
-            isReadImageListMap.put(pro.getId(), false);
         }
 
     }

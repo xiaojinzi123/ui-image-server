@@ -6,6 +6,7 @@ class Action {
 
         val ACTION_ADD:String = "add"
         val ACTION_DELETE:String = "delete"
+        val ACTION_MOVE:String = "move"
 
     }
 
@@ -15,22 +16,35 @@ class Action {
 
     var source: String? = null
 
+    var sourceCategory: String? = null
+
     var target: String? = null
+
+    var targetCategory: String? = null
 
     constructor()
 
     /**
      * @see ACTION
      */
-    constructor(action: String?, source: String?) {
+    constructor(action: String?, source: String?, sourceCategory: String?) {
         this.action = action
         this.source = source
+        this.sourceCategory = sourceCategory
     }
 
-    constructor(action: String?, source: String?, target: String?) {
+    /**
+     * @see ACTION
+     */
+    constructor(action: String?, source: String?, sourceCategory: String?, target: String?, targetCategory: String?) {
         this.action = action
         this.source = source
+        this.sourceCategory = sourceCategory
         this.target = target
+        this.targetCategory = targetCategory
     }
+
+
+
 
 }
