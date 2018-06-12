@@ -82,7 +82,9 @@
 
 </nav>
 
-<br style="margin-top: 2px;"/>
+<div class="alert alert-primary" role="alert" style="color: red;">
+    分类较少的项目,一个类别下面图片太多,会导致拖放的时候有一辆秒的延时! 所以对图片多的资源拖拽的时候请慢一点、耐心一点
+</div>
 
 <div style="display: flex;margin-left: 10px;margin-right: 10px;">
 
@@ -235,15 +237,12 @@
         $("#span_user_info").hide()
         $("#a_loginout").hide()
 
-        // 本地是否登录
-        var userToken = localStorage.getItem(keyToken);
+        if (isLogin()) { // 如果token不是null,就去请求用户信息
 
-        if (userToken != null) { // 如果token不是null,就去请求用户信息
-
-            req({url: baseUrl + "user?userToken=" + userToken}, function (result) {
+            req({url: baseUrl + "user?userToken=" + getUserToken()}, function (result) {
 
                     if (result == null) {
-                        localStorage.setItem(keyToken, null);
+                        saveUserToken(null)
                     } else {
                         $("#span_user_info").show()
                         $("#a_loginout").show()
@@ -252,7 +251,7 @@
                     }
 
                 }, function (msg) {
-                    localStorage.setItem(keyToken, null);
+                    saveUserToken(null)
                 }
             )
 
@@ -579,12 +578,12 @@
     }
 
     function onDrawableImageDrag(ev) {
-        console.log(ev.target.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute("data-key"));
-        ev.dataTransfer.setData("data-key", ev.target.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute("data-key"));
+        var key = ev.target.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute("data-key");
+        ev.dataTransfer.setData("drawable-image-key", key);
     }
 
     function onDrawableDrag(ev) {
-        ev.dataTransfer.setData("data-key", ev.target.getAttribute("data-key"));
+        ev.dataTransfer.setData("drawable-container-key", ev.target.getAttribute("data-key"));
     }
 
     function onDrawableDrog(ev) {
@@ -592,10 +591,13 @@
         ev.preventDefault();
 
         // 拿到一个 drawable 的key
-        var key = ev.dataTransfer.getData("data-key");
+        var key = ev.dataTransfer.getData("drawable-container-key");
 
-        console.log("ev.target = " + ev.target.id);
-        console.log("key = " + key);
+        // console.log("key = " + key);
+
+        if (key == null || key == "" || key.toLocaleLowerCase() == "null") {
+            key = ev.dataTransfer.getData("drawable-image-key");
+        }
 
         if (key == null || key == "" || key.toLocaleLowerCase() == "null") {
             return;

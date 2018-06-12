@@ -82,7 +82,7 @@
                 req({url: baseUrl + "auth/login?name=" + userName + "&password=" + userPass}, function (result) {
 
                         if (result != null && result.userToken != null) { // 登录成功
-                            localStorage.setItem(keyToken, result.userToken);
+                            saveUserToken(result.userToken);
                             location.href = "./index.html"
                         } else {
                             alert("登录失败")

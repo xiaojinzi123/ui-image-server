@@ -2,6 +2,7 @@ package com.xiaojinzi.image.init;
 
 import com.xiaojinzi.image.bean.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -18,36 +19,128 @@ public class IosDrawableRead implements DrawableRead {
     @NotNull
     public ProjectDrawable read(Project pro) {
 
-        // 这个文件夹下面的每一个文件夹都是一个类别
-        File resFolder = new File(ProjectUtil.getProjectPath(pro), pro.getResPath());
-
-        ProjectDrawable result = doReadList(resFolder);
+        ProjectDrawable result = doReadList(pro);
 
         return result;
     }
 
-    private ProjectDrawable doReadList(File resFolder) {
+    @Nullable
+    private Drawables readOneDrawables (File resFolder) {
+
+        if (resFolder == null || !resFolder.exists() || resFolder.isFile()) {
+            return null;
+        }
+
+        // 拿到资源的名称
+        String drawableName = resFolder.getName().substring(0, resFolder.getName().indexOf(".imageset"));
+
+        // Drawables drawables = new Drawables(category, drawableName);
+
+        Drawables drawables = new Drawables(drawableName);
+
+        List<Drawable> drawableList = drawables.getDrawables();
+
+        File[] drawableFiles = resFolder.listFiles();
+
+        if (drawableFiles != null) {
+
+            for (File drawableFile : drawableFiles) {
+
+                if (drawableFile.exists() && drawableFile.isFile() &&
+                        (drawableFile.getName().toLowerCase().endsWith(".png") || drawableFile.getName().toLowerCase().endsWith(".jpg"))) {
+
+                    String imagePath = drawableFile.getPath();
+
+                    imagePath = imagePath.replace(ProjectUtil.proFilder.getPath(), "");
+
+                    if (imagePath.length() > 0 && imagePath.startsWith(System.getProperty("file.separator"))) {
+                        imagePath = imagePath.substring(System.getProperty("file.separator").length());
+                    }
+
+                    Drawable drawable = new Drawable(drawableFile.getName(), imagePath);
+                    drawableList.add(drawable);
+
+                    try {
+                        BufferedImage bufferedImage = ImageIO.read(drawableFile);
+                        drawable.setWidth(bufferedImage.getWidth());
+                        drawable.setHeight(bufferedImage.getHeight());
+                    } catch (IOException e) {
+                    }
+
+                }
+
+            }
+
+        }
+
+        return drawables;
+
+    }
+
+    /**
+     * 读取资源
+     *
+     * @param resFolder 可能本身是一个类别 也可能是类别的父文件夹
+     */
+    private void readFolder(ArrayList<DrawableCategory> categories, File resFolder) {
+
+        if (resFolder == null || !resFolder.exists() || resFolder.isFile()) {
+            return;
+        }
+
+        DrawableCategory category = new DrawableCategory(resFolder.getName());
+
+        File[] itemFiles = resFolder.listFiles();
+
+        if (itemFiles == null) {
+
+            return;
+
+        }
+
+        for (File itemFile : itemFiles) {
+
+            if (itemFile.isDirectory()) {
+
+                if(itemFile.getName().endsWith(".imageset")) { // 如果是一个资源
+
+                    Drawables drawables = readOneDrawables(itemFile);
+                    drawables.setDrawableCategory(new DrawableCategory(category.getName()));
+
+                    category.getDrawablesList().add(drawables);
+
+                }else {
+
+                    readFolder(categories, itemFile);
+
+                }
+
+            }
+
+        }
+
+        if (category.getDrawablesList().size() > 0) {
+            categories.add(category);
+        }
+
+    }
+
+    private ProjectDrawable doReadList(Project pro) {
 
         ProjectDrawable projectDrawable = new ProjectDrawable();
 
         ArrayList<DrawableCategory> categories = projectDrawable.getCategories();
 
-        if (resFolder.exists() && resFolder.isDirectory()) {
+        String resPaths = pro.getResPath();
 
-            File[] itemFiles = resFolder.listFiles();
+        String[] resPathsArr = resPaths.split(";");
 
-            if (itemFiles != null) {
+        if (resPathsArr != null && resPathsArr.length > 0) {
 
-                for (File itemFile : itemFiles) {
-
-                    if (itemFile.isDirectory()) {
-
-                        soveOneCategoryFolder(itemFile, categories);
-
-                    }
-
-                }
-
+            for (String path : resPathsArr) {
+                // 这个文件夹下面的每一个文件夹都是一个类别
+                File resFolder = new File(ProjectUtil.getProjectPath(pro), path);
+                readFolder(categories,resFolder);
             }
 
         }
@@ -56,85 +149,5 @@ public class IosDrawableRead implements DrawableRead {
 
     }
 
-    /**
-     * 处理一个类别的文件夹
-     *
-     * @param itemFile
-     * @param categories
-     */
-    private void soveOneCategoryFolder(File itemFile, ArrayList<DrawableCategory> categories) {
-
-        DrawableCategory category = new DrawableCategory(itemFile.getName());
-
-        ArrayList<Drawables> drawablesList = category.getDrawablesList();
-
-        File[] files = itemFile.listFiles();
-
-        if (files == null) {
-            return;
-        }
-
-        for (File drawableFolder : files) {
-
-            if (!drawableFolder.exists() || drawableFolder.isFile()) {
-                continue;
-            }
-
-            String drawableName = drawableFolder.getName();
-
-            if (!drawableName.endsWith(".imageset")) { // 这种可能是类别中还有类别
-
-                soveOneCategoryFolder(drawableFolder, categories);
-
-                continue;
-
-            }
-
-            drawableName = drawableName.substring(0, drawableName.indexOf(".imageset"));
-
-            Drawables drawables = new Drawables(category, drawableName);
-
-            List<Drawable> drawableList = drawables.getDrawables();
-
-            File[] drawableFiles = drawableFolder.listFiles();
-
-            if (drawableFiles != null) {
-
-                for (File drawableFile : drawableFiles) {
-
-                    if (drawableFile.exists() && drawableFile.isFile() &&
-                            (drawableFile.getName().toLowerCase().endsWith(".png") || drawableFile.getName().toLowerCase().endsWith(".jpg"))) {
-
-                        String imagePath = drawableFile.getPath();
-
-                        imagePath = imagePath.replace(ProjectUtil.proFilder.getPath(), "");
-
-                        if (imagePath.length() > 0 && imagePath.startsWith(System.getProperty("file.separator"))) {
-                            imagePath = imagePath.substring(System.getProperty("file.separator").length());
-                        }
-
-                        Drawable drawable = new Drawable(drawableFile.getName(), imagePath);
-                        drawableList.add(drawable);
-
-                        try {
-                            BufferedImage bufferedImage = ImageIO.read(drawableFile);
-                            drawable.setWidth(bufferedImage.getWidth());
-                            drawable.setHeight(bufferedImage.getHeight());
-                        } catch (IOException e) {
-                        }
-
-                    }
-
-                }
-
-            }
-
-            drawablesList.add(drawables);
-
-        }
-
-        categories.add(category);
-
-    }
 
 }

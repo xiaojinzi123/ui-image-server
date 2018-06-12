@@ -25,3 +25,15 @@ function req(reqEntity, success, fail) {
         }
     });
 }
+
+function isLogin() {
+    return localStorage.getItem(keyToken) != null;
+}
+
+function getUserToken() {
+    return localStorage.getItem(keyToken);
+}
+
+function saveUserToken(userToken) {
+    localStorage.setItem(keyToken, userToken);
+}

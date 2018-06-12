@@ -59,7 +59,9 @@ public class ProjectManager {
 
             };
 
+            //timer.schedule(task, 0L, 600000L);
             timer.schedule(task, 0L, 600000L);
+
         }
 
     }

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Android Drawable Action</title>
+
+    <link rel="shortcut icon" href="http://www.1hai.cn/favicon.ico" type="image/x-icon"/>
+
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+            crossorigin="anonymous"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
+            integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
+            crossorigin="anonymous"></script>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <style type="text/css">
+
+        * {
+            padding: 0;
+            margin: 0;
+            word-wrap: break-word;
+        }
+
+        .carousel-control-prev-icon {
+            background-image: url("img/arrow-left.png");
+            margin-bottom: 30px;
+        }
+
+        .carousel-control-next-icon {
+            background-image: url("img/arrow-right.png");
+            margin-bottom: 30px;
+        }
+
+        a, .list-group-item {
+            font-size: 13px;
+        }
+
+
+    </style>
+
+</head>
+
+<body style="width: 100%;">
+
+<div style="display: flex;margin-left: 10px;margin-right: 10px;">
+
+    <div style="width: 200px;">
+        <!-- List group -->
+        <div class="list-group" id="drawabeCategory" role="tablist" style="margin-bottom: 100px;">
+
+            <!--<a class="list-group-item list-group-item-action active" data-toggle="list" href="#home" role="tab">All</a>-->
+            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#home" role="tab">Home</a>-->
+            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#profile" role="tab">Profile</a>-->
+            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#messages" role="tab">Messages</a>-->
+            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#settings"-->
+            <!--role="tab">Settings</a>-->
+
+            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+                 class="list-group-item list-group-item-action active" data-toggle="list">All
+            </div>
+            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+                 class="list-group-item list-group-item-action" data-toggle="list">Home
+            </div>
+            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+                 class="list-group-item list-group-item-action" data-toggle="list">Profile
+            </div>
+            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+                 class="list-group-item list-group-item-action" data-toggle="list">Messages
+            </div>
+            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+                 class="list-group-item list-group-item-action" data-toggle="list">Settings
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+<script src="js/image.js"></script>
+
+<script type="text/javascript">
+
+
+</script>
+
+</html>

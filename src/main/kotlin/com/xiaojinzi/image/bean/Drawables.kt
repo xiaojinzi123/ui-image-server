@@ -20,4 +20,12 @@ class Drawables {
         this.drawableName = drawableName
     }
 
+    constructor(drawables: List<Drawable>?) {
+        this.drawables = drawables
+    }
+
+    constructor(drawableName: String?) {
+        this.drawableName = drawableName
+    }
+
 }

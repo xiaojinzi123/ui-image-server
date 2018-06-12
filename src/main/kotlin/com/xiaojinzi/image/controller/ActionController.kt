@@ -6,6 +6,7 @@ import com.xiaojinzi.image.bean.Action
 import com.xiaojinzi.image.bean.User
 import com.xiaojinzi.image.service.action.ActionService
 import com.xiaojinzi.image.service.user.UserService
+import com.xiaojinzi.image.util.ActionExistException
 import com.xiaojinzi.image.util.LoginException
 import com.xiaojinzi.image.util.TokenGeneratorManager
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,14 +57,20 @@ class ActionController {
 
         }
 
-        val action = Action(Action.ACTION.ACTION_DELETE, source,sourceCategory)
+        val action = Action(Action.ACTION.ACTION_DELETE, source, sourceCategory)
 
-        val b = actionService!!.insert(action)
+        try {
 
-        if (b) {
-            return Result(action)
-        } else {
-            return Result("fail to delete")
+            val b = actionService!!.insert(action)
+
+            if (b) {
+                return Result(action)
+            } else {
+                return Result("fail to delete")
+            }
+
+        } catch (e: ActionExistException) {
+            return Result(e.message)
         }
 
     }
@@ -93,12 +100,16 @@ class ActionController {
 
         val action = Action(Action.ACTION.ACTION_MOVE, source, sourceCategory, null, targetCategory)
 
-        val b = actionService!!.insert(action)
+        try {
+            val b = actionService!!.insert(action)
 
-        if (b) {
-            return Result(action)
-        } else {
-            return Result("fail to move")
+            if (b) {
+                return Result(action)
+            } else {
+                return Result("fail to move")
+            }
+        } catch (e: ActionExistException) {
+            return Result(e.message)
         }
 
     }
