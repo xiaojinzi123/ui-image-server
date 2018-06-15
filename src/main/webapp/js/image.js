@@ -1,4 +1,5 @@
 
+
 var baseUrl = "http://localhost:8080/image/";
 
 var keyToken = "userToken";

@@ -12,6 +12,7 @@ import java.util.*;
 
 /**
  * 实现 IOS 项目的资源的读取
+ * {@link #readFolder(ArrayList, File)} 方法的参数,File 本身不应该是一个图片资源,应该是一个类别,或者类别的类别
  */
 public class IosDrawableRead implements DrawableRead {
 
@@ -33,8 +34,6 @@ public class IosDrawableRead implements DrawableRead {
 
         // 拿到资源的名称
         String drawableName = resFolder.getName().substring(0, resFolder.getName().indexOf(".imageset"));
-
-        // Drawables drawables = new Drawables(category, drawableName);
 
         Drawables drawables = new Drawables(drawableName);
 
@@ -90,6 +89,8 @@ public class IosDrawableRead implements DrawableRead {
 
         DrawableCategory category = new DrawableCategory(resFolder.getName());
 
+        Map<String, Drawables> drawablesMap = new HashMap<>();
+
         File[] itemFiles = resFolder.listFiles();
 
         if (itemFiles == null) {
@@ -112,6 +113,44 @@ public class IosDrawableRead implements DrawableRead {
                 }else {
 
                     readFolder(categories, itemFile);
+
+                }
+
+            } else { // 如果是一个文件
+
+                if (itemFile.getName().toLowerCase().endsWith(".png") ||
+                        itemFile.getName().toLowerCase().endsWith(".jpg")) { // 如果是一个图片
+
+                    int index = itemFile.getName().lastIndexOf(".");
+
+                    String drawableName = itemFile.getName().substring(0, index);
+
+                    index = itemFile.getName().lastIndexOf("@");
+
+                    if (index != -1) {
+                        drawableName = drawableName.substring(0, index);
+                    }
+
+                    Drawables drawables = drawablesMap.get(drawableName);
+
+                    if (drawables == null) {
+
+                        drawables = new Drawables(drawableName);
+                        drawablesMap.put(drawableName, drawables);
+
+                    }
+
+                    Drawable drawable = new Drawable(itemFile.getName(), itemFile.getName(), imagePath);
+                    drawables.add(drawable);
+
+                    try {
+                        BufferedImage bufferedImage = ImageIO.read(itemFile);
+                        drawable.setWidth(bufferedImage.getWidth());
+                        drawable.setHeight(bufferedImage.getHeight());
+                    } catch (IOException e) {
+                    }
+
+                    drawables.getDrawables().add(new Drawable())
 
                 }
 
