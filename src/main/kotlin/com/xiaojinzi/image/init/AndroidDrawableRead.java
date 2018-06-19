@@ -27,7 +27,7 @@ public class AndroidDrawableRead implements DrawableRead {
 
     private ProjectDrawable doReadList(File resFolder) {
 
-        ProjectDrawable projectDrawable = new ProjectDrawable();
+        ProjectDrawable projectDrawable = new ProjectDrawable(Project.ProjectType.INSTANCE.getTYPE_ANDROID());
 
         ArrayList<DrawableCategory> result = new ArrayList<>();
 
@@ -36,17 +36,34 @@ public class AndroidDrawableRead implements DrawableRead {
 
         File[] files = resFolder.listFiles();
 
+        File[] sortFolders = new File[4];
+
         if (files != null) {
             for (File file : files) {
 
                 // 如果是 drawable 文件夹
                 if (file.exists() && file.isDirectory() && file.getName().startsWith("drawable")) {
 
-                    soveDrawablFolder(file, map, projectDrawable);
+                    if ("drawable".equals(file.getName())) {
+                        sortFolders[0] = file;
+                    }else if ("drawable-hdpi".equals(file.getName())) {
+                        sortFolders[1] = file;
+                    }else if ("drawable-xhdpi".equals(file.getName())) {
+                        sortFolders[2] = file;
+                    }else if ("drawable-xxhdpi".equals(file.getName())) {
+                        sortFolders[3] = file;
+                    }
 
                 }
 
             }
+        }
+
+        for (int i = 0; i < sortFolders.length; i++) {
+            if (sortFolders[i] == null) {
+                continue;
+            }
+            soveDrawablFolder(sortFolders[i], map);
         }
 
         // 将整理的资源文件转化成前端显示的形式
@@ -77,7 +94,7 @@ public class AndroidDrawableRead implements DrawableRead {
 
     }
 
-    private void soveDrawablFolder(File drawableFolder, Map<String, List<Drawable>> map, ProjectDrawable projectDrawable) {
+    private void soveDrawablFolder(File drawableFolder, Map<String, List<Drawable>> map) {
 
         if (drawableFolder == null || !drawableFolder.exists() || drawableFolder.isFile()) {
             return;
@@ -112,7 +129,7 @@ public class AndroidDrawableRead implements DrawableRead {
                 // 物理机的真实路径,做一个转化
                 String imagePath = itemFile.getPath();
 
-                imagePath = imagePath.replace(ProjectUtil.proFilder.getPath(), "");
+                imagePath = imagePath.replace(ProjectUtil.rootFilder.getPath(), "");
 
                 if (imagePath.length() > 0 && imagePath.startsWith(System.getProperty("file.separator"))) {
                     imagePath = imagePath.substring(System.getProperty("file.separator").length());

@@ -5406,6 +5406,12 @@ button.close {
     .modal-lg {
         max-width: 800px
     }
+    .modal-llg {
+        max-width: 1000px
+    }
+    .modal-lllg {
+        max-width: 1200px
+    }
 }
 
 .tooltip {

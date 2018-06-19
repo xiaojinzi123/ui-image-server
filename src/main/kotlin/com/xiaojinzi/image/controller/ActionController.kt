@@ -1,19 +1,15 @@
 package com.xiaojinzi.image.controller
 
 import com.xiaojinzi.image.Result
-import com.xiaojinzi.image.Result.Companion.ERROR_TOKENEXPIRE
 import com.xiaojinzi.image.bean.Action
-import com.xiaojinzi.image.bean.User
+import com.xiaojinzi.image.init.ProjectUtil
 import com.xiaojinzi.image.service.action.ActionService
-import com.xiaojinzi.image.service.user.UserService
 import com.xiaojinzi.image.util.ActionExistException
-import com.xiaojinzi.image.util.LoginException
-import com.xiaojinzi.image.util.TokenGeneratorManager
+import com.xiaojinzi.image.util.ImageFileManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Controller
-import org.springframework.stereotype.Repository
 import org.springframework.web.bind.annotation.*
-import java.io.PrintWriter
+import org.springframework.web.multipart.commons.CommonsMultipartFile
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -38,6 +34,25 @@ class ActionController {
         }
 
         return null
+
+    }
+
+    /**
+     * 更新一个资源
+     */
+    @PostMapping("upload")
+    @ResponseBody
+    fun updateAction(request: HttpServletRequest, @RequestParam("file") file: CommonsMultipartFile): Result<String>? {
+
+        request.requestURL;
+
+        val targetFile = ImageFileManager.getInstance().saveImage(file)
+
+        if (targetFile == null) {
+            return Result("fail to upload");
+        } else {
+            return Result(targetFile.path.replace(ProjectUtil.rootFilder.path, ""), "upload : " + file.originalFilename, true);
+        }
 
     }
 
@@ -75,6 +90,9 @@ class ActionController {
 
     }
 
+    /**
+     * 移动一个资源到其他的类别下面
+     */
     @PutMapping()
     @ResponseBody
     fun moveAction(request: HttpServletRequest, response: HttpServletResponse,

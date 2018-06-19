@@ -22,6 +22,8 @@ class Result<T> {
         isSuccess = false
     }
 
+
+
     constructor(msg: String?,errorCode:Int) {
         var msg = msg
         this.msg = msg
@@ -29,6 +31,13 @@ class Result<T> {
         isSuccess = false
 
     }
+
+    constructor(data: T?, msg: String?, isSuccess: Boolean) {
+        this.data = data
+        this.msg = msg
+        this.isSuccess = isSuccess
+    }
+
 
     companion object {
         val OK = "ok"

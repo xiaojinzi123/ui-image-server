@@ -4,6 +4,8 @@ var baseUrl = "http://localhost:8080/image/";
 
 var keyToken = "userToken";
 
+
+
 function req(reqEntity, success, fail) {
 
     if (reqEntity.error == null) {
@@ -15,6 +17,7 @@ function req(reqEntity, success, fail) {
     $.ajax(reqEntity).done(function (result) {
         console.log(result)
         var resultObject = eval("(" + result + ")");
+        console.log("------------")
         if (resultObject.success) {
             if (success != null) {
                 success(resultObject.data);

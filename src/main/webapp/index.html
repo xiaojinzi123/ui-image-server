@@ -54,6 +54,7 @@
     <!--常用方法-->
     <script type="text/javascript">
 
+        // 全局唯一的
         function alertMsg(msg, title) {
 
             if (title != null && title != "") {
@@ -64,6 +65,75 @@
 
         }
 
+        var toggleColor = false;
+
+        function changeBg() {
+
+            var eles = document.getElementsByClassName("changeBg");
+
+            if (eles == null || eles.length == 0) {
+                return;
+            }
+
+            var len = eles.length;
+
+            for (var i = 0; i < len; i++) {
+
+                var e = eles[i];
+
+                if (toggleColor) {
+
+                    e.style.backgroundColor = "white";
+
+                } else {
+
+                    e.style.backgroundColor = "#95ffe2";
+
+                }
+
+            }
+
+            toggleColor = !toggleColor;
+
+        }
+
+        var toggleColorOfUpdateDrawable = false;
+
+        function changeUpdateDrawableSourceBg() {
+
+            var eles = document.getElementsByClassName("updateAndroidDrawableModalSourceBg");
+
+            if (eles == null || eles.length == 0) {
+                return;
+            }
+
+            var len = eles.length;
+
+            for (var i = 0; i < len; i++) {
+
+                var e = eles[i];
+
+                if (toggleColorOfUpdateDrawable) {
+
+                    e.style.backgroundColor = "white";
+
+                } else {
+
+                    e.style.backgroundColor = "#95ffe2";
+
+                }
+
+            }
+
+            toggleColorOfUpdateDrawable = !toggleColorOfUpdateDrawable;
+
+        }
+
+        function beforUpdateDrawable() {
+            toggleColorOfUpdateDrawable = true;
+            changeUpdateDrawableSourceBg();
+        }
+
     </script>
 
     <script type="text/javascript">
@@ -72,6 +142,8 @@
         var carousel_container_tag_value = "carousel_container_tag";
 
         var projectDrawable;
+        var ANDROID_DRAWABLE_TYPE = "Android";
+        var IOS_DRAWABLE_TYPE = "IOS";
 
         var mapDrawable = {};
 
@@ -145,9 +217,56 @@
 
         }
 
+        /**
+         * UI 想要更新一个资源
+         *
+         * @param category
+         * @param drawablesEntity
+         */
+        function onEditDrawable(category, drawablesEntity) {
+
+            if (projectDrawable == null) {
+                return;
+            }
+
+            if (ANDROID_DRAWABLE_TYPE == projectDrawable.drawableType) { // 如果是 Android 的更新图片
+
+                beforUpdateDrawable();
+
+                var container = document.getElementById("updateAndroidDrawableModalSource");
+                var drawables = drawablesEntity.drawables;
+                var len = drawables.length;
+
+                container.innerHTML = "";
+
+                for (var i = 0; i < len; i++) {
+
+                    var drawable = drawables[i];
+                    var message = "";
+
+                    if (drawable.drawableFolderName == null || drawable.drawableFolderName == "") {
+                        message = drawable.drawableName;
+                    } else {
+                        message = drawable.drawableFolderName;
+                    }
+
+                    var drawableDiv = createUpdateView(baseUrl + drawable.imagePath, message);
+
+                    container.appendChild(drawableDiv);
+
+                }
+
+                $('#updateAndroidDrawableModal').modal('show');
+
+            } else {
+                alertMsg("后续更新支持");
+            }
+
+        }
+
         function reqProImageList(proId) {
 
-            clearCategoryAndDrawables();
+            beforProjectImageLoaded();
 
             req({url: baseUrl + "project/listImage?proId=" + proId}, function (result) {
 
@@ -176,7 +295,7 @@
 
             var categoryLength = categories.length;
 
-            clearCategoryAndDrawables();
+            afterProjectImageLoaded();
 
             for (var i = 0; i < categoryLength; i++) {
 
@@ -225,9 +344,13 @@
 
         }
 
-        function clearCategoryAndDrawables() {
+        function beforProjectImageLoaded() {
             $("#drawabeCategory")[0].innerHTML = "";
             $("#div_drawable_container")[0].innerHTML = "";
+            toggleColor = false;
+        }
+
+        function afterProjectImageLoaded() {
         }
 
         function createOneCategory(categoryIndex, category) {
@@ -262,6 +385,7 @@
 
             var div_carousel_container = document.createElement("div");       // ========================== 0
             // draggable="true" ondragstart="onDrawableDrag(event)"
+            div_carousel_container.setAttribute("class", "changeBg");
             div_carousel_container.setAttribute("draggable", "true");
             div_carousel_container.setAttribute("ondragstart", "onDrawableDrag(event)");
             div_carousel_container.setAttribute("style", "background: white;width :200px;height: 240px;float: left;margin-left: 10px;margin-bottom: 10px;position:relative;");
@@ -394,6 +518,10 @@
             img_edit_drawable.setAttribute("class", "drawable-edit");
             img_edit_drawable.setAttribute("style", "width: 28px;height: 28px;position:absolute;left:0;top:0;margin-left: 5px;margin-top: 5px;");
 
+            img_edit_drawable.onclick = function (ev) {
+                onEditDrawable(category, drawablesEntity);
+            }
+
             div_carousel_container.appendChild(img_edit_drawable);                  // ==========================3 -> 0
 
             var img_delete_drawable = document.createElement("img");                  // ==========================4
@@ -489,19 +617,139 @@
 
     </script>
 
-    <!--图片上传有关的方法-->
+    <!--图片上传和 drawable 更新有关的方法-->
     <script type="text/javascript">
 
-        function ondragleaveForAndroid(e) {
+        function ondragFileLeaveForAndroid(e) {
             e.preventDefault();
         }
 
-        function ondropForAndroid(e) {
+        function ondropFileForAndroid(e) {
             e.preventDefault();
 
-            var fileList = e.dataTransfer.files;
+            var items = e.dataTransfer.items;
 
-            alertMsg(fileList.length)
+            if (items == null) {
+                return;
+            }
+
+            var len = items.length;
+
+            if (len == 1) {
+
+                var item = items[0].webkitGetAsEntry();
+
+                if (item.isFile) {
+
+                    uploadFile(items[0].getAsFile(),function (result) {
+                        e.target.src = baseUrl + result;
+                    });
+
+                } else {
+
+                    alertMsg('您拖拽的不是一个文件对象');
+
+                }
+
+            } else {
+
+                for (var i = 0; i < len; i++) {
+
+                    var item = items[i];
+
+                }
+
+            }
+
+        }
+
+        /**
+         * 上传一个文件
+         * 参数 fileItem 是一个文件对象
+         */
+        function uploadFile(fileItem, success, fail) {
+
+            // 判断浏览器是否支持FileReader
+            if (!window.FileReader) {
+                alertMsg('您的浏览器不支持FileReader，请更换浏览器。');
+                return;
+            }
+
+            if (fileItem == null) {
+                alertMsg('文件对象不可以为空');
+                return;
+            }
+
+            var fd = new FormData();
+            fd.append("file", fileItem);
+
+            req(
+                {
+                    url: baseUrl + 'action/upload',
+                    type: 'post',
+                    dataType: 'text',
+                    data: fd,
+                    cache: false,
+                    processData: false,
+                    contentType: false
+                }, function (result) {
+
+                    if (success != null) {
+                        success(result);
+                    }
+
+                }, function (msg) {
+
+                    if (fail != null) {
+                        fail(msg);
+                    }
+
+                }
+            )
+
+            // xhr: function(){
+            //     var xhr = $.ajaxSettings.xhr();
+            //     if(onprogress && xhr.upload) {
+            //         xhr.upload.addEventListener("progress" , onprogress, false);
+            //         return xhr;
+            //     }
+            // }
+
+        }
+
+        //进度把控
+        // function uploadProgress( evt ){
+        //     if( evt.lengthComputable ){
+        //         var percentComplete = Math.round( evt.loaded * 100 / evt.total );
+        //         console.log( "已上传：" + percentComplete );
+        //     }
+        // }
+
+        /**
+         * 创建一个更新的时候用的展示视图的东西,上图下文
+         */
+        function createUpdateView(imagePath, message) {
+
+            var div1 = document.createElement("div");
+            var div2 = document.createElement("div");
+            var img1 = document.createElement("img");
+            var span1 = document.createElement("span");
+
+            div1.setAttribute("class", "updateAndroidDrawableModalSourceBg");
+
+            img1.setAttribute("style", "max-width: 100%;max-height: 100%;")
+            img1.setAttribute("src", imagePath)
+
+            div1.setAttribute("style", "margin-top: 20px;width: 160px;height: 180px;text-align:center;margin-left: auto;margin-right: auto;");
+            div2.setAttribute("style", "width: 160px;height: 160px;display: table-cell;vertical-align: middle;");
+
+            span1.innerText = message;
+
+            div2.appendChild(img1);
+            div1.appendChild(div2);
+            div1.appendChild(span1);
+
+            return div1;
 
         }
 
@@ -530,8 +778,13 @@
 
     <input type="button" onclick="alertMsg('内容','标题')" value="点我"/>
 
+    <a id="a_change_bg" style="color: cornflowerblue;margin-left: 20px;" href="#" onclick="changeBg()">更换底色</a>
+
     <a id="a_alert" style="color: cornflowerblue;margin-left: 20px;" href="#" data-toggle="modal"
        data-target="#alertModal">提示</a>
+
+    <a id="a_update" style="color: cornflowerblue;margin-left: 20px;" href="#" data-toggle="modal"
+       data-target="#updateAndroidDrawableModal">更新Android图片</a>
 
     <a id="a_upload" style="color: cornflowerblue;margin-left: 20px;" href="#" data-toggle="modal"
        data-target="#uploadDrawableModal">上传图片</a>
@@ -554,13 +807,6 @@
     <div style="width: 200px;">
         <!-- List group -->
         <div class="list-group" id="drawabeCategory" role="tablist" style="margin-bottom: 100px;">
-
-            <!--<a class="list-group-item list-group-item-action active" data-toggle="list" href="#home" role="tab">All</a>-->
-            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#home" role="tab">Home</a>-->
-            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#profile" role="tab">Profile</a>-->
-            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#messages" role="tab">Messages</a>-->
-            <!--<a class="list-group-item list-group-item-action" data-toggle="list" href="#settings"-->
-            <!--role="tab">Settings</a>-->
 
             <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
                  class="list-group-item list-group-item-action active" data-toggle="list">All
@@ -585,7 +831,7 @@
 
         <div id="div_drawable_container">
 
-            <div draggable="true" ondragstart="onDrawableDrag(event)"
+            <div draggable="true" ondragstart="onDrawableDrag(event)" class="changeBg"
                  style="background: white;width :200px;height: 240px;float: left;margin-left: 10px;margin-bottom: 10px;position:relative;">
 
                 <div id="carousel1" class="carousel slide" data-ride="carousel" data-interval="5000"
@@ -687,13 +933,15 @@
     <div class="modal fade" id="uploadDrawableModal" tabindex="-1" role="dialog"
          aria-labelledby="uploadDrawableModalLabel"
          aria-hidden="true">
-        <div class="modal-dialog modal-lg" style="margin-top: 130px;">
+        <div class="modal-dialog modal-llg" style="margin-top: 130px;">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">图片上传(直接拖拽上传和选择文件上传)</h4>
+                    <h4 class="modal-title">图片上传(请拖拽到加号处)</h4>
                     <a class="close" data-dismiss="modal" aria-hidden="true">×</a>
                 </div>
                 <div class="modal-body">
+
+                    <h6 style="margin-bottom: 10px;color: red;" class="modal-title">如果有不支持的操作请联系开发或者特殊的图直接给开发</h6>
 
                     <nav>
                         <div class="nav nav-tabs" role="tablist">
@@ -701,36 +949,30 @@
                                role="tab" aria-controls="upload-nav-android" aria-selected="true"
                                style="font-size: 20px;">Android(至少要有一种分辨率)</a>
                             <a class="nav-item nav-link" data-toggle="tab" href="#upload_nav_ios"
-                               role="tab" aria-controls="upload-nav-ios" aria-selected="false" style="font-size: 20px;">IOS(必须两种分辨率都有)</a>
+                               role="tab" aria-controls="upload-nav-ios" aria-selected="false" style="font-size: 20px;">iOS(必须两种分辨率都有)</a>
                         </div>
                     </nav>
-                    <div class="tab-content" style="height: 300px;">
+                    <div class="tab-content" style="max-height: 440px;">
+
+                        <!--<div style="height:30%; overflow:auto;">1</div>-->
+                        <!--<div style="height:30%; overflow:auto;">2</div>-->
+                        <!--<div style="height:100px; overflow:auto;background: #17a2b8;">3<div style="height:1000px;"></div></div>-->
 
                         <div class="tab-pane fade show active" role="tabpanel" id="upload_nav_android"
-                             aria-labelledby="upload_nav_android-tab">
+                             aria-labelledby="upload_nav_android-tab"
+                             style="height: 440px;overflow: auto;background-image: url('img/add.png');background-repeat: no-repeat;background-position: center;"
+                             ondragleave="ondragleaveForAndroid(event)" ondrop="ondropForAndroid(event)"
+                             ondragover="allowDrop(event)">
 
-                            <div style="height: 300px;padding-top: 75px;">
+                            <!--<span style="position: relative;width: 150px;float: left;margin-left: 20px;margin-top: 20px;">-->
+                            <!--<img src="img/add.png" style="width: 150px;height: 150px;"/>-->
+                            <!--<div style="text-align: center;width: 100%;">xhdpi</div>-->
+                            <!--</span>-->
 
-                                <span style="position: absolute;" ondragleave="ondragleaveForAndroid(event)"
-                                      ondrop="ondropForAndroid(event)" ondragover="allowDrop(event)">
-                                    <img src="img/add.png" style="width: 150px;height: 150px;"/>
-                                    <div style="text-align: center;">xhdpi</div>
-                                </span>
-                                <span style="position: absolute;margin-left: 170px;">
-                                    <img src="img/add.png" style="width: 150px;height: 150px;"/>
-                                    <div style="text-align: center;">xxhdpi</div>
-                                </span>
-                                <span style="position: absolute;margin-left: 340px;">
-                                    <img src="img/add.png" style="width: 150px;height: 150px;"/>
-                                    <div style="text-align: center;">xxxhdpi</div>
-                                </span>
-
-                                <span style="position: absolute;margin-left: 600px;">
-                                    <img src="img/intelligent.png" style="width: 150px;height: 150px;padding: 5px;"/>
-                                    <div style="text-align: center;font-size: 14px;">智能识别文件夹</div>
-                                </span>
-
-                            </div>
+                            <!--<span style="position: relative;width: 150px;float: left;margin-left: 20px;margin-top: 20px;" ondragleave="ondragleaveForAndroid(event)" ondrop="ondropForAndroid(event)" ondragover="allowDrop(event)">-->
+                            <!--<img src="img/add.png" style="width: 150px;height: 150px;"/>-->
+                            <!--<div style="text-align: center;width: 100%;">xhdpi</div>-->
+                            <!--</span>-->
 
                         </div>
 
@@ -770,6 +1012,105 @@
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
+
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="updateAndroidDrawableModal" tabindex="-1" role="dialog"
+         aria-labelledby="updateAndroidDrawableModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-llg" style="margin-top: 80px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Android图片更新(请拖拽到加号处,替换的目标至少要有一种分辨率的,比如用xxdpi替换)</h5>
+                    <a class="close" data-dismiss="modal" aria-hidden="true">×</a>
+                </div>
+                <div class="modal-body">
+
+                    <h6 style="margin-bottom: 10px;color: red;" class="modal-title">如果有不支持的操作请联系开发或者特殊的图直接给开发</h6>
+
+                    <div class="tab-content" style="height: 480px;">
+
+                        <div id="updateAndroidDrawableModalSource" class="updateAndroidDrawableModalSourceBg"
+                             style="width: 40%;height: 100%;float:left;position: relative;overflow: auto;">
+
+                            <div style="margin-top: 20px;width: 160px;height: 180px;text-align:center;margin-left: auto;margin-right: auto;">
+                                <div style="width: 160px;height: 160px;display: table-cell;vertical-align: middle;">
+                                    <img style="max-width: 100%;max-height: 100%;"
+                                         src="http://b.hiphotos.baidu.com/image/pic/item/faf2b2119313b07e536da48f00d7912396dd8c61.jpg">
+                                </div>
+                                <span>qwertyu</span>
+                            </div>
+
+                            <div style="margin-top: 20px;width: 160px;height: 180px;text-align:center;margin-left: auto;margin-right: auto;">
+                                <div style="width: 160px;height: 160px;display: table-cell;vertical-align: middle;">
+                                    <img style="max-width: 100%;max-height: 100%;"
+                                         src="http://e.hiphotos.baidu.com/image/pic/item/f603918fa0ec08fa3dfe9e2355ee3d6d54fbdabc.jpg">
+                                </div>
+                                <span>qweqweqwe</span>
+                            </div>
+
+                            <div style="margin-top: 20px;width: 160px;height: 180px;text-align:center;margin-left: auto;margin-right: auto;">
+                                <div style="width: 160px;height: 160px;display: table-cell;vertical-align: middle;">
+                                    <img style="max-width: 100%;max-height: 100%;"
+                                         src="http://e.hiphotos.baidu.com/image/pic/item/f603918fa0ec08fa3dfe9e2355ee3d6d54fbdabc.jpg">
+                                </div>
+                                <span>qweqweqwe</span>
+                            </div>
+
+                        </div>
+
+                        <img src="img/arrow-right1.png"
+                             style="width: 80px;height: 80px;float:left;position: relative;margin-left: 80px;margin-top: 60px;">
+
+                        <div style="width: 40%;height: 100%;float:right;position: relative;overflow: auto;">
+
+                            <div style="margin-top: 20px;width: 160px;height: 180px;text-align:center;margin-left: auto;margin-right: auto;"
+                                 ondragleave="ondragFileLeaveForAndroid(event)" ondrop="ondropFileForAndroid(event)"
+                                 ondragover="allowDrop(event)">
+                                <div style="width: 160px;height: 160px;display: table-cell;vertical-align: middle;">
+                                    <img id="updateAndroidDrawableModalTargetHdpiImg" style="max-width: 100%;max-height: 100%;"
+                                         src="img/add.png">
+                                </div>
+                                <span>hdpi</span>
+                            </div>
+
+                            <div style="margin-top: 20px;width: 160px;height: 180px;text-align:center;margin-left: auto;margin-right: auto;"
+                                 ondragleave="ondragFileLeaveForAndroid(event)" ondrop="ondropFileForAndroid(event)"
+                                 ondragover="allowDrop(event)">
+                                <div style="width: 160px;height: 160px;display: table-cell;vertical-align: middle;">
+                                    <img style="max-width: 100%;max-height: 100%;"
+                                         src="img/add.png">
+                                </div>
+                                <span>xhdpi</span>
+                            </div>
+
+                            <div style="margin-top: 20px;width: 160px;height: 180px;text-align:center;margin-left: auto;margin-right: auto;"
+                                 ondragleave="ondragFileLeaveForAndroid(event)" ondrop="ondropFileForAndroid(event)"
+                                 ondragover="allowDrop(event)">
+                                <div style="width: 160px;height: 160px;display: table-cell;vertical-align: middle;">
+                                    <img style="max-width: 100%;max-height: 100%;"
+                                         src="img/add.png">
+                                </div>
+                                <span>xxhdpi</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" style="width: 80px;"
+                            onclick="changeUpdateDrawableSourceBg()">更换底色
+                    </button>
+                    <button type="button" class="btn btn-primary" style="width: 80px;">重置</button>
+                    <button type="button" class="btn btn-primary" style="width: 80px;">更新</button>
+                </div>
+
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+
 </div>
 <!-- /.modal -->
 

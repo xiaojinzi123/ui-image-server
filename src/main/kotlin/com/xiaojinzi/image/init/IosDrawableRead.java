@@ -22,11 +22,55 @@ public class IosDrawableRead implements DrawableRead {
 
         ProjectDrawable result = doReadList(pro);
 
+        // 对内部的 drawable 做一个排序
+
+        ArrayList<DrawableCategory> categories = result.getCategories();
+
+        for (DrawableCategory category : categories) {
+
+            ArrayList<Drawables> drawableList = category.getDrawablesList();
+
+            for (Drawables drawables : drawableList) {
+
+                // 对这个排序
+                List<Drawable> drawablesList = drawables.getDrawables();
+
+                drawablesList.sort(new Comparator<Drawable>() {
+                    @Override
+                    public int compare(Drawable o1, Drawable o2) {
+
+                        String drawableName1 = o1.getDrawableName();
+                        String drawableName2 = o2.getDrawableName();
+
+                        if (!drawableName1.contains("@")) {
+                            return -1;
+                        }
+
+                        if (!drawableName2.contains("@")) {
+                            return 1;
+                        }
+
+                        if (drawableName1.contains("@2x") && drawableName2.contains("@3x")) {
+                            return -1;
+                        }
+
+                        if (drawableName1.contains("@3x") && drawableName2.contains("@2x")) {
+                            return 1;
+                        }
+
+                        return 0;
+                    }
+                });
+
+            }
+
+        }
+
         return result;
     }
 
     @Nullable
-    private Drawables readOneDrawables (File resFolder) {
+    private Drawables readOneDrawables(File resFolder) {
 
         if (resFolder == null || !resFolder.exists() || resFolder.isFile()) {
             return null;
@@ -45,12 +89,11 @@ public class IosDrawableRead implements DrawableRead {
 
             for (File drawableFile : drawableFiles) {
 
-                if (drawableFile.exists() && drawableFile.isFile() &&
-                        (drawableFile.getName().toLowerCase().endsWith(".png") || drawableFile.getName().toLowerCase().endsWith(".jpg"))) {
+                if (isImageFile(drawableFile)) {
 
                     String imagePath = drawableFile.getPath();
 
-                    imagePath = imagePath.replace(ProjectUtil.proFilder.getPath(), "");
+                    imagePath = imagePath.replace(ProjectUtil.rootFilder.getPath(), "");
 
                     if (imagePath.length() > 0 && imagePath.startsWith(System.getProperty("file.separator"))) {
                         imagePath = imagePath.substring(System.getProperty("file.separator").length());
@@ -103,14 +146,14 @@ public class IosDrawableRead implements DrawableRead {
 
             if (itemFile.isDirectory()) {
 
-                if(itemFile.getName().endsWith(".imageset")) { // 如果是一个资源
+                if (itemFile.getName().endsWith(".imageset")) { // 如果是一个资源
 
                     Drawables drawables = readOneDrawables(itemFile);
                     drawables.setDrawableCategory(new DrawableCategory(category.getName()));
 
                     category.getDrawablesList().add(drawables);
 
-                }else {
+                } else {
 
                     readFolder(categories, itemFile);
 
@@ -118,15 +161,17 @@ public class IosDrawableRead implements DrawableRead {
 
             } else { // 如果是一个文件
 
-                if (itemFile.getName().toLowerCase().endsWith(".png") ||
-                        itemFile.getName().toLowerCase().endsWith(".jpg")) { // 如果是一个图片
+                if (isImageFile(itemFile)) { // 如果是一个图片
 
                     int index = itemFile.getName().lastIndexOf(".");
 
+                    // 拿到没有后缀的文件名称
                     String drawableName = itemFile.getName().substring(0, index);
 
+                    // 检查是否带有@字符串,这个表示这个是 IOS 中的几倍图
                     index = itemFile.getName().lastIndexOf("@");
 
+                    // 如果有的话进一步提取文件名称
                     if (index != -1) {
                         drawableName = drawableName.substring(0, index);
                     }
@@ -140,8 +185,15 @@ public class IosDrawableRead implements DrawableRead {
 
                     }
 
+                    String imagePath = itemFile.getPath();
+
+                    imagePath = imagePath.replace(ProjectUtil.rootFilder.getPath(), "");
+
+                    if (imagePath.length() > 0 && imagePath.startsWith(System.getProperty("file.separator"))) {
+                        imagePath = imagePath.substring(System.getProperty("file.separator").length());
+                    }
+
                     Drawable drawable = new Drawable(itemFile.getName(), itemFile.getName(), imagePath);
-                    drawables.add(drawable);
 
                     try {
                         BufferedImage bufferedImage = ImageIO.read(itemFile);
@@ -150,7 +202,7 @@ public class IosDrawableRead implements DrawableRead {
                     } catch (IOException e) {
                     }
 
-                    drawables.getDrawables().add(new Drawable())
+                    drawables.getDrawables().add(drawable);
 
                 }
 
@@ -158,6 +210,17 @@ public class IosDrawableRead implements DrawableRead {
 
         }
 
+        Set<Map.Entry<String, Drawables>> entries = drawablesMap.entrySet();
+
+        for (Map.Entry<String, Drawables> entry : entries) {
+
+            Drawables drawables = entry.getValue();
+
+            category.getDrawablesList().add(drawables);
+
+        }
+
+        // 如果该类别下面的drawable个数不是0说明不是空的,那么就让前端展示这个类别
         if (category.getDrawablesList().size() > 0) {
             categories.add(category);
         }
@@ -166,7 +229,7 @@ public class IosDrawableRead implements DrawableRead {
 
     private ProjectDrawable doReadList(Project pro) {
 
-        ProjectDrawable projectDrawable = new ProjectDrawable();
+        ProjectDrawable projectDrawable = new ProjectDrawable(Project.ProjectType.INSTANCE.getTYPE_IOS());
 
         ArrayList<DrawableCategory> categories = projectDrawable.getCategories();
 
@@ -179,7 +242,7 @@ public class IosDrawableRead implements DrawableRead {
             for (String path : resPathsArr) {
                 // 这个文件夹下面的每一个文件夹都是一个类别
                 File resFolder = new File(ProjectUtil.getProjectPath(pro), path);
-                readFolder(categories,resFolder);
+                readFolder(categories, resFolder);
             }
 
         }
@@ -188,5 +251,22 @@ public class IosDrawableRead implements DrawableRead {
 
     }
 
+    private boolean isImageFile(File file) {
+
+        if(file == null) return false;
+
+        if(!file.exists()) return false;
+
+        if(file.isDirectory()) return false;
+
+        if (file.getName().toLowerCase().endsWith(".png")
+                || file.getName().toLowerCase().endsWith(".jpg")
+                || file.getName().toLowerCase().endsWith(".gif")) {
+            return true;
+        }
+
+        return false;
+
+    }
 
 }
