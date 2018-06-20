@@ -12,6 +12,11 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
     <style type="text/css">
+
+        ::-webkit-scrollbar {
+            display: none
+        }
+
         * {
             padding: 0;
             margin: 0;
@@ -32,7 +37,7 @@
             font-size: 13px;
         }
 
-        .drawable-edit, .drawable-close {
+        .drawable-edit, .drawable-close, .drawable-choose {
             cursor: pointer;
         }
 
@@ -142,6 +147,7 @@
         var carousel_container_tag_value = "carousel_container_tag";
 
         var projectDrawable;
+
         var ANDROID_DRAWABLE_TYPE = "Android";
         var IOS_DRAWABLE_TYPE = "IOS";
 
@@ -195,74 +201,6 @@
             )
 
         });
-
-        /**
-         * 提交一个删除资源的Action
-         */
-        function onDeleteDrawable(category, drawablesEntity) {
-
-            req({
-                    type: 'DELETE',
-                    url: baseUrl + "action?sourceCategory=" + category.name + "&source=" + drawablesEntity.drawableName
-                }, function (result) {
-
-                    alertMsg(result);
-
-                }, function (msg) {
-
-                    alertMsg(msg);
-
-                }
-            )
-
-        }
-
-        /**
-         * UI 想要更新一个资源
-         *
-         * @param category
-         * @param drawablesEntity
-         */
-        function onEditDrawable(category, drawablesEntity) {
-
-            if (projectDrawable == null) {
-                return;
-            }
-
-            if (ANDROID_DRAWABLE_TYPE == projectDrawable.drawableType) { // 如果是 Android 的更新图片
-
-                beforUpdateDrawable();
-
-                var container = document.getElementById("updateAndroidDrawableModalSource");
-                var drawables = drawablesEntity.drawables;
-                var len = drawables.length;
-
-                container.innerHTML = "";
-
-                for (var i = 0; i < len; i++) {
-
-                    var drawable = drawables[i];
-                    var message = "";
-
-                    if (drawable.drawableFolderName == null || drawable.drawableFolderName == "") {
-                        message = drawable.drawableName;
-                    } else {
-                        message = drawable.drawableFolderName;
-                    }
-
-                    var drawableDiv = createUpdateView(baseUrl + drawable.imagePath, message);
-
-                    container.appendChild(drawableDiv);
-
-                }
-
-                $('#updateAndroidDrawableModal').modal('show');
-
-            } else {
-                alertMsg("后续更新支持");
-            }
-
-        }
 
         function reqProImageList(proId) {
 
@@ -348,6 +286,8 @@
             $("#drawabeCategory")[0].innerHTML = "";
             $("#div_drawable_container")[0].innerHTML = "";
             toggleColor = false;
+            $('#img_drawable_selected').attr('data-key', null);
+            $('#img_drawable_selected').attr('src', 'img/come_on.jpg');
         }
 
         function afterProjectImageLoaded() {
@@ -362,8 +302,7 @@
             } else {
                 div.setAttribute("class", "list-group-item list-group-item-action");
             }
-            // ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
-            div.setAttribute("ondrop", "onDrawableDrog(event)");
+            div.setAttribute("ondrop", "onDrawableCategoryDrog(event)");
             div.setAttribute("ondragover", "allowDrop(event)");
             div.setAttribute("data-toggle", "list");
             //div.setAttribute("onclick", "showImagesOfCategory('" + categoryIndex + "')");
@@ -524,7 +463,21 @@
 
             div_carousel_container.appendChild(img_edit_drawable);                  // ==========================3 -> 0
 
-            var img_delete_drawable = document.createElement("img");                  // ==========================4
+            // <img onclick="onChooseDrawable()" class="drawable-choose" src="img/choose.png"
+            // style="width: 20px;height: 20px;position:absolute;right:0;top:0;margin-right: 38px;margin-top: 9px;">
+
+            var img_choose_drawable = document.createElement("img");                  // ==========================4
+            img_choose_drawable.setAttribute("src", "img/choose.png");
+            img_choose_drawable.setAttribute("class", "drawable-choose");
+            img_choose_drawable.setAttribute("style", "width: 20px;height: 20px;position:absolute;right:0;top:0;margin-right: 38px;margin-top: 9px;");
+
+            img_choose_drawable.onclick = function (ev) {
+                onChooseDrawable(div_carousel_container,category, drawablesEntity);
+            }
+
+            div_carousel_container.appendChild(img_choose_drawable);                  // ==========================4 -> 0
+
+            var img_delete_drawable = document.createElement("img");                  // ==========================5
             img_delete_drawable.setAttribute("src", "img/close.png");
             img_delete_drawable.setAttribute("class", "drawable-close");
             //img_delete_drawable.setAttribute("onclick", "onDeleteDrawable()");
@@ -534,86 +487,12 @@
                 onDeleteDrawable(category, drawablesEntity);
             }
 
-            div_carousel_container.appendChild(img_delete_drawable);                  // ==========================4 -> 0
+            div_carousel_container.appendChild(img_delete_drawable);                  // ==========================5 -> 0
 
             return div_carousel_container;
 
 
         }
-
-
-        // =============================== 有关拖动的 start===============================
-
-        function allowDrop(ev) {
-            ev.preventDefault();
-        }
-
-        function onDrawableImageDrag(ev) {
-            var key = ev.target.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute("data-key");
-            ev.dataTransfer.setData("drawable-image-key", key);
-        }
-
-        function onDrawableDrag(ev) {
-            ev.dataTransfer.setData("drawable-container-key", ev.target.getAttribute("data-key"));
-        }
-
-        function onDrawableDrog(ev) {
-
-            ev.preventDefault();
-
-            // 拿到一个 drawable 的key
-            var key = ev.dataTransfer.getData("drawable-container-key");
-
-            // console.log("key = " + key);
-
-            if (key == null || key == "" || key.toLocaleLowerCase() == "null") {
-                key = ev.dataTransfer.getData("drawable-image-key");
-            }
-
-            if (key == null || key == "" || key.toLocaleLowerCase() == "null") {
-                return;
-            }
-
-            // 拿到拖拽过来的 drawable 对应的数据
-            var drawableEntity = mapDrawable[key]
-
-            // 拿到拖拽的目标类别名称
-            var targetCategoryName = ev.target.innerText;
-            var originalCategoryName = drawableEntity.drawableCategory.name;
-
-            if (targetCategoryName == originalCategoryName) { // 表示拖到了同一个类别下
-                alertMsg("不能移动到同一类别!请选择其他类别");
-            } else {
-
-                var sourceCategory = originalCategoryName;
-                var source = drawableEntity.drawableName;
-                var targetCategory = targetCategoryName;
-
-                req({
-                        type: 'PUT',
-                        url: baseUrl + "action?sourceCategory=" + sourceCategory + "&source=" + source + "&targetCategory=" + targetCategory
-                    }, function (result) {
-
-                        alertMsg(result);
-
-                    }, function (msg) {
-
-                        alertMsg(msg);
-
-                    }
-                )
-            }
-
-            // console.log("ev.target.innerText = " + ev.target.innerText);
-            // console.log("drawableEntity = " + drawableEntity);
-            // console.log("drawableEntity.string = " + JSON.stringify(drawableEntity));
-            // console.log("drawableEntity.drawableName = " + drawableEntity.drawableName);
-
-            //ev.target.appendChild(document.getElementById(data));
-
-        }
-
-        // =============================== 有关拖动的 end=================================
 
     </script>
 
@@ -641,7 +520,7 @@
 
                 if (item.isFile) {
 
-                    uploadFile(items[0].getAsFile(),function (result) {
+                    uploadFile(items[0].getAsFile(), function (result) {
                         e.target.src = baseUrl + result;
                     });
 
@@ -735,8 +614,6 @@
             var img1 = document.createElement("img");
             var span1 = document.createElement("span");
 
-            div1.setAttribute("class", "updateAndroidDrawableModalSourceBg");
-
             img1.setAttribute("style", "max-width: 100%;max-height: 100%;")
             img1.setAttribute("src", imagePath)
 
@@ -750,6 +627,239 @@
             div1.appendChild(span1);
 
             return div1;
+
+        }
+
+    </script>
+
+    <!--有关拖拽的方法的实现-->
+    <script type="text/javascript">
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        /**
+         * 每一个资源中的 img 标签的拖拽
+         * @param ev
+         */
+        function onDrawableImageDrag(ev) {
+            var key = ev.target.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute("data-key");
+            ev.dataTransfer.setData("drawable-image-key", key);
+        }
+
+        /**
+         * 每一个资源的拖拽
+         * @param ev
+         */
+        function onDrawableDrag(ev) {
+            ev.dataTransfer.setData("drawable-container-key", ev.target.getAttribute("data-key"));
+        }
+
+        /**
+         * 把一个资源拖拽到一个类别中
+         * @param ev
+         */
+        function onDrawableCategoryDrog(ev) {
+
+            ev.preventDefault();
+
+            // 拿到一个 drawable 的key
+            var key = ev.dataTransfer.getData("drawable-container-key");
+
+            // console.log("key = " + key);
+
+            if (key == null || key == "" || key.toLocaleLowerCase() == "null") {
+                key = ev.dataTransfer.getData("drawable-image-key");
+            }
+
+            if (key == null || key == "" || key.toLocaleLowerCase() == "null") {
+                return;
+            }
+
+            // 拿到拖拽过来的 drawable 对应的数据
+            var drawableEntity = mapDrawable[key]
+
+            // 拿到拖拽的目标类别名称
+            var targetCategoryName = ev.target.innerText;
+            var originalCategoryName = drawableEntity.drawableCategory.name;
+
+            if (targetCategoryName == originalCategoryName) { // 表示拖到了同一个类别下
+                alertMsg("不能移动到同一类别!请选择其他类别");
+            } else {
+
+                var sourceCategory = originalCategoryName;
+                var source = drawableEntity.drawableName;
+                var targetCategory = targetCategoryName;
+
+                req({
+                        type: 'PUT',
+                        url: baseUrl + "action?sourceCategory=" + sourceCategory + "&source=" + source + "&targetCategory=" + targetCategory
+                    }, function (result) {
+
+                        alertMsg(result);
+
+                    }, function (msg) {
+
+                        alertMsg(msg);
+
+                    }
+                )
+            }
+
+        }
+
+        /**
+         * 吧一个资源拖拽到右侧的选择资源中,也就是标记选择
+         * @param ev
+         */
+        function onDrawableSelectDrog(ev) {
+
+            ev.preventDefault();
+
+            // 拿到一个 drawable 的key
+            var key = ev.dataTransfer.getData("drawable-container-key");
+
+            // console.log("key = " + key);
+
+            if (key == null || key == "" || key.toLocaleLowerCase() == "null") {
+                key = ev.dataTransfer.getData("drawable-image-key");
+            }
+
+            if (key == null || key == "" || key.toLocaleLowerCase() == "null") {
+                return;
+            }
+
+            // 拿到拖拽过来的 drawable 对应的数据
+            var drawableEntity = mapDrawable[key]
+
+            // 拿到拖拽的目标类别名称
+            var targetCategoryName = ev.target.innerText;
+            var originalCategoryName = drawableEntity.drawableCategory.name;
+
+            $('#img_drawable_selected').attr('src', baseUrl + drawableEntity.drawables[0].imagePath);
+
+            $('#img_drawable_selected').attr('data-key', key);
+
+        }
+
+    </script>
+
+    <!--有关一个资源的操作-->
+    <script type="text/javascript">
+
+        /**
+         * 选择一个资源
+         */
+        function onChooseDrawable(div_carousel_container,category, drawablesEntity) {
+
+            var key = div_carousel_container.getAttribute("data-key");
+
+            if(key == null || key == "") {
+                alertMsg("key 为null");
+                return;
+            }
+
+            $('#img_drawable_selected').attr('src', baseUrl + drawablesEntity.drawables[0].imagePath);
+
+            $('#img_drawable_selected').attr('data-key', key);
+        }
+
+        /**
+         * 提交一个删除资源的Action
+         */
+        function onDeleteDrawable(category, drawablesEntity) {
+
+            req({
+                    type: 'DELETE',
+                    url: baseUrl + "action?sourceCategory=" + category.name + "&source=" + drawablesEntity.drawableName
+                }, function (result) {
+
+                    alertMsg(result);
+
+                }, function (msg) {
+
+                    alertMsg(msg);
+
+                }
+            )
+
+        }
+
+        /**
+         * UI 想要更新一个资源
+         *
+         * @param sourceCategory
+         * @param drawablesEntity
+         */
+        function onEditDrawable(sourceCategory, sourceDrawablesEntity) {
+
+            var targetKey = $('#img_drawable_selected').attr('data-key');
+
+            if (projectDrawable == null) {
+                return;
+            }
+
+            if (targetKey == null || targetKey == "") {
+                alertMsg("请先选择替换的资源!拖动到右边的悬浮窗口即可,介绍也看右边悬浮窗口底部的文字")
+                return;
+            }
+
+            var targetDrawableEntity = mapDrawable[targetKey]
+
+            if(sourceDrawablesEntity == targetDrawableEntity) {
+                alertMsg("不能替换自身");
+                return;
+            }
+
+            beforUpdateDrawable();
+
+            var sourceContainer = document.getElementById("updateAndroidDrawableModalSource");
+            var targetContainer = document.getElementById("updateDrawableModalTarget");
+            var sourceDrawables = sourceDrawablesEntity.drawables;
+            var targetDrawables = targetDrawableEntity.drawables;
+            var sourceLen = sourceDrawables.length;
+            var targetLen = targetDrawables.length;
+
+            sourceContainer.innerHTML = "";
+            targetContainer.innerHTML = "";
+
+            for (var i = 0; i < sourceLen; i++) {
+
+                var drawable = sourceDrawables[i];
+                var message = "";
+
+                if (drawable.drawableFolderName == null || drawable.drawableFolderName == "") {
+                    message = drawable.drawableName;
+                } else {
+                    message = drawable.drawableFolderName;
+                }
+
+                var drawableDiv = createUpdateView(baseUrl + drawable.imagePath, message);
+
+                sourceContainer.appendChild(drawableDiv);
+
+            }
+
+            for (var i = 0; i < targetLen; i++) {
+
+                var drawable = targetDrawables[i];
+                var message = "";
+
+                if (drawable.drawableFolderName == null || drawable.drawableFolderName == "") {
+                    message = drawable.drawableName;
+                } else {
+                    message = drawable.drawableFolderName;
+                }
+
+                var drawableDiv = createUpdateView(baseUrl + drawable.imagePath, message);
+
+                targetContainer.appendChild(drawableDiv);
+
+            }
+
+            $('#updateAndroidDrawableModal').modal('show');
+
 
         }
 
@@ -804,30 +914,30 @@
 
 <div style="display: flex;margin-left: 10px;margin-right: 10px;">
 
-    <div style="width: 200px;">
+    <div style="width: 200px;max-height: 800px;overflow: auto;">
         <!-- List group -->
         <div class="list-group" id="drawabeCategory" role="tablist" style="margin-bottom: 100px;">
 
-            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+            <div ondrop="onDrawableCategoryDrog(event)" ondragover="allowDrop(event)"
                  class="list-group-item list-group-item-action active" data-toggle="list">All
             </div>
-            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+            <div ondrop="onDrawableCategoryDrog(event)" ondragover="allowDrop(event)"
                  class="list-group-item list-group-item-action" data-toggle="list">Home
             </div>
-            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+            <div ondrop="onDrawableCategoryDrog(event)" ondragover="allowDrop(event)"
                  class="list-group-item list-group-item-action" data-toggle="list">Profile
             </div>
-            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+            <div ondrop="onDrawableCategoryDrog(event)" ondragover="allowDrop(event)"
                  class="list-group-item list-group-item-action" data-toggle="list">Messages
             </div>
-            <div ondrop="onDrawableDrog(event)" ondragover="allowDrop(event)"
+            <div ondrop="onDrawableCategoryDrog(event)" ondragover="allowDrop(event)"
                  class="list-group-item list-group-item-action" data-toggle="list">Settings
             </div>
 
         </div>
     </div>
 
-    <div class="container-fluid rounded" style="height: 850px;margin-left: 4px;">
+    <div class="container-fluid rounded" style="height: 850px;margin-left: 4px;overflow: auto;">
 
         <div id="div_drawable_container">
 
@@ -852,7 +962,7 @@
                             <div style="width :200px;height: 100px;display: table-cell;vertical-align: middle;">
 
                                 <img draggable="true" ondragstart="onDrawableImageDrag(event)"
-                                     src="http://h.hiphotos.baidu.com/image/pic/item/2cf5e0fe9925bc31b3e6ab0a52df8db1ca1370ed.jpg"
+                                     src="https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2463790003,3003324786&fm=27&gp=0.jpg"
                                      style="max-width: 100%;max-height: 100%;">
 
                             </div>
@@ -873,7 +983,7 @@
                             <div style="width :200px;height: 100px;display: table-cell;vertical-align: middle;">
 
                                 <img draggable="true" ondragstart="onDrawableImageDrag(event)"
-                                     src="http://h.hiphotos.baidu.com/image/pic/item/2cf5e0fe9925bc31b3e6ab0a52df8db1ca1370ed.jpg"
+                                     src="https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2463790003,3003324786&fm=27&gp=0.jpg"
                                      style="max-width: 100%;max-height: 100%;">
 
                             </div>
@@ -912,8 +1022,11 @@
                     name：app_login_icon.png
                 </h4>
 
-                <img class="drawable-edit" src="img/edit.png"
+                <img onclick="onEditDrawable()" class="drawable-edit" src="img/edit.png"
                      style="width: 28px;height: 28px;position:absolute;left:0;top:0;margin-left: 5px;margin-top: 5px;">
+
+                <img onclick="onChooseDrawable()" class="drawable-choose" src="img/choose.png"
+                     style="width: 20px;height: 20px;position:absolute;right:0;top:0;margin-right: 38px;margin-top: 9px;">
 
                 <img onclick="onDeleteDrawable()" class="drawable-close" src="img/close.png"
                      style="width: 28px;height: 28px;position:absolute;right:0;top:0;margin-right: 5px;margin-top: 5px;">
@@ -925,6 +1038,17 @@
     </div>
 
 </div>
+
+<div style="width: 160px;height: 200px;position: fixed;text-align:center;left:100%; top:50%;margin-left: -160px;margin-right: auto;"
+     ondrop="onDrawableSelectDrog(event)"
+     ondragover="allowDrop(event)">
+    <div class="changeBg" style="width: 160px;height: 160px;display: table-cell;vertical-align: middle;">
+        <img id="img_drawable_selected" style="max-width: 100%;max-height: 100%;"
+             src="img/come_on.jpg">
+    </div>
+    <span style="color: blue;">已选中的资源(A图片替换B图片,我是A图片)</span>
+</div>
+
 
 <!--一些看不见的视图-->
 <div>
@@ -1061,13 +1185,15 @@
                         <img src="img/arrow-right1.png"
                              style="width: 80px;height: 80px;float:left;position: relative;margin-left: 80px;margin-top: 60px;">
 
-                        <div style="width: 40%;height: 100%;float:right;position: relative;overflow: auto;">
+                        <div id="updateDrawableModalTarget" class="updateAndroidDrawableModalSourceBg"
+                             style="width: 40%;height: 100%;float:right;position: relative;overflow: auto;">
 
                             <div style="margin-top: 20px;width: 160px;height: 180px;text-align:center;margin-left: auto;margin-right: auto;"
                                  ondragleave="ondragFileLeaveForAndroid(event)" ondrop="ondropFileForAndroid(event)"
                                  ondragover="allowDrop(event)">
                                 <div style="width: 160px;height: 160px;display: table-cell;vertical-align: middle;">
-                                    <img id="updateAndroidDrawableModalTargetHdpiImg" style="max-width: 100%;max-height: 100%;"
+                                    <img id="updateAndroidDrawableModalTargetHdpiImg"
+                                         style="max-width: 100%;max-height: 100%;"
                                          src="img/add.png">
                                 </div>
                                 <span>hdpi</span>
@@ -1111,26 +1237,26 @@
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
 
-</div>
-<!-- /.modal -->
+    <!-- 模态框（Modal） -->
+    <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalTitle"
+         aria-hidden="true">
+        <div class="modal-dialog  modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="alertModalTitle">友情提醒</h4>
+                    <a class="close" data-dismiss="modal" aria-hidden="true">×</a>
+                </div>
+                <div class="modal-body" id="alertModalContent">
+                    qweqwe
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">确定</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
 
-<!-- 模态框（Modal） -->
-<div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalTitle"
-     aria-hidden="true">
-    <div class="modal-dialog  modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="alertModalTitle">友情提醒</h4>
-                <a class="close" data-dismiss="modal" aria-hidden="true">×</a>
-            </div>
-            <div class="modal-body" id="alertModalContent">
-                qweqwe
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">确定</button>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
 
